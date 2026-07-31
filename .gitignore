@@ -1,0 +1,40 @@
+# Foundry
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# React Native
+mobile/android/app/build/
+mobile/ios/Pods/
+mobile/.expo/
+*.keystore
+
+# ZK artifacts
+circuits/build/
+*.zkey
+*.r1cs
+*.wtns
+*.ptau
+
+# Environment — NEVER COMMIT KEYS
+.env
+.env.*
+!.env.example
+*.pem
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Thesis working files
+docs/tesis/**/*.docx
+~$*
