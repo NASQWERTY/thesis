@@ -1,15 +1,48 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.28;
 
+import {Checkpoints} from "@openzeppelin/contracts/utils/structs/Checkpoints.sol";
+import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+
 /// @title Community governance with delegated voting and automatic testnet payment
 /// @notice One deployment per community. See docs/prototype/spec.md.
 contract CommunityGovernance {
+    using Checkpoints for Checkpoints.Trace208;
+
+    // ---------------------------------------------------------------------
+    // Types
+    // ---------------------------------------------------------------------
+
+    struct Member {
+        bool registered; // in the registry (eligible or not); blocks supplier registration
+        bool eligible; // false = moroso
+        uint32 weight; // current vote weight, registrar-only
+        address delegate; // current delegate, address(0) = none
+        uint32 receivedWeight; // sum of current weights of current delegators
+    }
+
     // ---------------------------------------------------------------------
     // Errors
     // ---------------------------------------------------------------------
 
     error ZeroQuorum();
     error ZeroPeriod();
+    error NotRegistrar();
+    error ZeroAddress();
+    error ZeroWeight();
+    error AlreadyRegistered(address member);
+    error NotRegistered(address member);
+    error AddressIsSupplier(address account);
+    error EligibilityUnchanged(address member, bool eligible);
+
+    // ---------------------------------------------------------------------
+    // Events (spec §6)
+    // ---------------------------------------------------------------------
+
+    event MemberRegistered(address indexed member, uint32 weight);
+    event MemberRemoved(address indexed member);
+    event EligibilityChanged(address indexed member, bool eligible);
+    event WeightChanged(address indexed member, uint32 oldWeight, uint32 newWeight);
 
     // ---------------------------------------------------------------------
     // Parameters (spec §2)
@@ -37,6 +70,22 @@ contract CommunityGovernance {
     /// @notice The only account allowed to modify the member and supplier registries (ADR-0015).
     address public immutable registrar;
 
+    mapping(address => Member) public members;
+
+    /// @notice Registry in order of registration. Append-only: used to iterate at close.
+    address[] public memberList;
+
+    /// @notice The address was ever pushed to `memberList`.
+    mapping(address => bool) public listed;
+
+    mapping(address => bool) public isSupplier;
+
+    /// @dev Effective weight per member: `weight` if registered and eligible, else 0.
+    mapping(address => Checkpoints.Trace208) private weightHistory;
+
+    /// @dev Sum of all effective weights.
+    Checkpoints.Trace208 private totalWeightHistory;
+
     // ---------------------------------------------------------------------
     // Constructor
     // ---------------------------------------------------------------------
@@ -49,5 +98,105 @@ contract CommunityGovernance {
         quorum = quorum_;
         BIDDING_PERIOD = biddingPeriod_;
         VOTING_PERIOD = votingPeriod_;
+    }
+
+    // ---------------------------------------------------------------------
+    // Modifiers
+    // ---------------------------------------------------------------------
+
+    modifier onlyRegistrar() {
+        if (msg.sender != registrar) revert NotRegistrar();
+        _;
+    }
+
+    modifier onlyRegistered(address member) {
+        if (!members[member].registered) revert NotRegistered(member);
+        _;
+    }
+
+    // ---------------------------------------------------------------------
+    // Registry (HU-001)
+    // ---------------------------------------------------------------------
+
+    function registerMember(address member, uint32 weight) external onlyRegistrar {
+        if (member == address(0)) revert ZeroAddress();
+        if (weight == 0) revert ZeroWeight();
+        if (members[member].registered) revert AlreadyRegistered(member);
+        if (isSupplier[member]) revert AddressIsSupplier(member);
+
+        Member storage m = members[member];
+        m.registered = true;
+        m.eligible = true;
+        m.weight = weight;
+
+        if (!listed[member]) {
+            listed[member] = true;
+            memberList.push(member);
+        }
+        _checkpointWeight(member, weight);
+
+        emit MemberRegistered(member, weight);
+    }
+
+    /// @notice Removes `member` from the registry from now on. Past snapshots still see them.
+    /// TODO(HU-005): revoke the member's outgoing and incoming delegations (OPEN-4).
+    function removeMember(address member) external onlyRegistrar onlyRegistered(member) {
+        _checkpointWeight(member, 0);
+        // Stays in memberList (append-only) and keeps `listed`, so re-registering does not duplicate it.
+        delete members[member];
+
+        emit MemberRemoved(member);
+    }
+
+    function setEligibility(address member, bool eligible) external onlyRegistrar onlyRegistered(member) {
+        Member storage m = members[member];
+        if (m.eligible == eligible) revert EligibilityUnchanged(member, eligible);
+
+        m.eligible = eligible;
+        _checkpointWeight(member, eligible ? m.weight : 0);
+
+        emit EligibilityChanged(member, eligible);
+    }
+
+    function setWeight(address member, uint32 newWeight) external onlyRegistrar onlyRegistered(member) {
+        if (newWeight == 0) revert ZeroWeight();
+
+        Member storage m = members[member];
+        uint32 oldWeight = m.weight;
+        m.weight = newWeight;
+        // An ineligible member keeps effective weight 0; the new weight applies when re-enabled.
+        if (m.eligible) _checkpointWeight(member, newWeight);
+
+        emit WeightChanged(member, oldWeight, newWeight);
+    }
+
+    // ---------------------------------------------------------------------
+    // Views
+    // ---------------------------------------------------------------------
+
+    /// @notice Effective weight of `member` at `time` (0 if not registered or not eligible then).
+    function weightAt(address member, uint48 time) external view returns (uint208) {
+        return weightHistory[member].upperLookup(time);
+    }
+
+    /// @notice Sum of effective weights at `time`.
+    function totalWeightAt(uint48 time) external view returns (uint208) {
+        return totalWeightHistory.upperLookup(time);
+    }
+
+    function memberCount() external view returns (uint256) {
+        return memberList.length;
+    }
+
+    // ---------------------------------------------------------------------
+    // Internal
+    // ---------------------------------------------------------------------
+
+    /// @dev Records `member`'s new effective weight and adjusts the total, both keyed at now.
+    function _checkpointWeight(address member, uint208 newEffective) private {
+        uint48 now_ = Time.timestamp();
+        uint208 oldEffective = weightHistory[member].latest();
+        weightHistory[member].push(now_, newEffective);
+        totalWeightHistory.push(now_, totalWeightHistory.latest() - oldEffective + newEffective);
     }
 }
