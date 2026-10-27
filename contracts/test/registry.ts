@@ -55,6 +55,15 @@ describe("HU-001 member registry", function () {
         .withArgs(alice.address);
     });
 
+    it("rejects an address registered as supplier (ADR-0021)", async function () {
+      const { gov, carol } = await networkHelpers.loadFixture(deployFixture);
+      await gov.registerSupplier(carol.address);
+
+      await expect(gov.registerMember(carol.address, 1))
+        .to.be.revertedWithCustomError(gov, "AddressIsSupplier")
+        .withArgs(carol.address);
+    });
+
     it("rejects a zero weight", async function () {
       const { gov, alice } = await networkHelpers.loadFixture(deployFixture);
       await expect(gov.registerMember(alice.address, 0)).to.be.revertedWithCustomError(gov, "ZeroWeight");

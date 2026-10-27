@@ -33,6 +33,7 @@ contract CommunityGovernance {
     error AlreadyRegistered(address member);
     error NotRegistered(address member);
     error AddressIsSupplier(address account);
+    error AddressIsMember(address account);
     error EligibilityUnchanged(address member, bool eligible);
 
     // ---------------------------------------------------------------------
@@ -43,6 +44,7 @@ contract CommunityGovernance {
     event MemberRemoved(address indexed member);
     event EligibilityChanged(address indexed member, bool eligible);
     event WeightChanged(address indexed member, uint32 oldWeight, uint32 newWeight);
+    event SupplierRegistered(address indexed supplier);
 
     // ---------------------------------------------------------------------
     // Parameters (spec §2)
@@ -168,6 +170,24 @@ contract CommunityGovernance {
         if (m.eligible) _checkpointWeight(member, newWeight);
 
         emit WeightChanged(member, oldWeight, newWeight);
+    }
+
+    // ---------------------------------------------------------------------
+    // Supplier registry (HU-002)
+    // ---------------------------------------------------------------------
+
+    /// @notice Registration only: suppliers cannot be modified or removed (ADR-0017).
+    /// The supplier's name is kept off-chain by the enrollment simulator.
+    function registerSupplier(address supplier) external onlyRegistrar {
+        if (supplier == address(0)) revert ZeroAddress();
+        if (isSupplier[supplier]) revert AlreadyRegistered(supplier);
+        // Disjoint from the member registry, eligible or not (ADR-0021). `listed` also covers
+        // removed members: they may still vote on issues whose snapshot predates the removal.
+        if (listed[supplier]) revert AddressIsMember(supplier);
+
+        isSupplier[supplier] = true;
+
+        emit SupplierRegistered(supplier);
     }
 
     // ---------------------------------------------------------------------
