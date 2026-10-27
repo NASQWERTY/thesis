@@ -39,3 +39,38 @@ Al introducir un término por primera vez, indicar el original en inglés entre 
 - [ ] `nullifier` — ¿traducir o mantener en inglés con cursiva?
 - [ ] `receipt-freeness` — definir la forma castellana que se usará en todo el documento
 - [ ] `snapshot` — ¿"instantánea" o mantener?
+
+## Diccionario de identificadores del prototipo (código ↔ dominio)
+
+Fuente: Entrega 3, Tablas 18–25. El código usa los identificadores en inglés; el documento,
+los términos en español.
+
+| Identificador | Término del dominio |
+|---|---|
+| `CommunityGovernance` | Contrato de gobernanza comunitaria |
+| `registrar` | Registrador |
+| `Member` / `members` / `memberList` | Miembro / padrón |
+| `registered` | Empadronado (figura en el padrón) |
+| `eligible` | Habilitado (`false` = moroso, inhabilitado) |
+| `weight` | Peso de voto |
+| `delegate` / `delegateTo` / `revokeDelegation` | Delegado / delegar / revocar la delegación |
+| `receivedWeight` | Peso delegado recibido |
+| `DELEGATION_CAP_DIVISOR` | Divisor del tope de delegación (1/3) |
+| `isSupplier` / `registerSupplier` | Registro de proveedores / alta de proveedor |
+| `Issue` / `createIssue` | Cuestión / plantear una cuestión |
+| `proposer` | Miembro que plantea |
+| `ceiling` | Techo presupuestario |
+| `reservedBalance` | Reserva (suma de techos comprometidos) |
+| `topic` | Etiqueta temática |
+| `descriptionCid` / `documentCid` | CID en IPFS de la descripción / de la propuesta |
+| `snapshot` | Snapshot del padrón |
+| `BIDDING_PERIOD` / `VOTING_PERIOD` | Ventana de ofertas / plazo de votación |
+| `Bid` / `submitBid` | Oferta / presentar oferta |
+| `Ballot` / `castBallot` / `ranking` | Boleta / emitir boleta / orden de preferencias |
+| `REJECT_ALL` | "Rechazar todas" |
+| `quorum` | Quórum |
+| `closeIssue` | Cierre (y adjudicación) |
+| `Awarded` / `winningBidId` | Adjudicada / oferta adjudicada |
+| `ClosedWithoutAward` | Cerrada sin adjudicación |
+| `executeTransfer` / `Executed` | Ejecución de la transferencia / ejecutada |
+| `weightHistory` / `delegateHistory` / `totalWeightHistory` | Historiales (checkpoints) |

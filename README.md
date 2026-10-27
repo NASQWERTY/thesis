@@ -1,30 +1,32 @@
-# TFG — Sistema de gobernanza comunitaria con democracia líquida y pruebas de conocimiento cero
+# TFG — Sistema de gobernanza comunitaria sobre blockchain
 
 Trabajo Final de Grado — Ingeniería en Software, Universidad Siglo 21.
-Modalidad: Prototipado Tecnológico.
+Modalidad: Prototipado Tecnológico. Caso de referencia: Complejo Jardines del Sur (Córdoba).
+
+Plataforma de votación con delegación de voto y pago automático en red de prueba que permite,
+a un grupo predefinido de miembros, plantear cuestiones, obtener ofertas y votar.
 
 ## Estructura
 
 | Directorio | Contenido |
 |---|---|
-| `contracts/` | Contratos inteligentes (Solidity + Foundry) |
-| `circuits/` | Circuitos ZK / integración con Semaphore |
-| `mobile/` | Aplicación móvil (React Native) |
-| `simulation/` | Simulaciones de grafos de delegación |
+| `contracts/` | Contrato inteligente `CommunityGovernance` (Solidity + Hardhat) |
+| `simulator/` | Simulador de empadronamiento y alta de proveedores (Node.js) |
+| `supplier-portal/` | Servicio web de proveedores (React) |
+| `mobile/` | Aplicación del miembro (React Native) |
+| `docs/prototype/` | Especificación, backlog, arquitectura y decisiones abiertas |
 | `docs/adr/` | Architecture Decision Records |
-| `docs/tesis/` | Documento del TFG |
-| `docs/diagramas/` | Diagramas de arquitectura y procesos |
-
-## Estado
-
-En fase de diseño e infraestructura inicial.
 
 ## Red objetivo
 
 Arbitrum Sepolia (testnet). **Sin despliegue en mainnet. Sin activos de valor económico.**
 
+## Puesta en marcha
+
+*(instructivo pendiente — se completa en el Sprint 5)*
+
 ## Convenciones
 
 - Documento del TFG: español, normas APA 7
-- Código, comentarios y commits: inglés
+- Código, comentarios y commits: inglés; textos de interfaz: español
 - Ver `CLAUDE.md` para las instrucciones de trabajo asistido

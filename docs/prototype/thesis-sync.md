@@ -1,0 +1,15 @@
+# Thesis ↔ code sync
+
+Things in the code that make the thesis document (Google Doc) inaccurate. Claude Code appends
+here; the author updates the document and ticks the item.
+
+- [ ] **Tabla 15 (HU-008):** remove the last criterion ("si un votante presentó una oferta…"). Decided 2026-10-23 (ADR-0021).
+- [ ] **Tabla 9 (HU-002):** first criterion — the name is kept by the simulator, only the address goes to the contract. Decided 2026-10-23.
+- [ ] **Tablas 8 y 9 (HU-001 / HU-002):** add the cross-registration rejection criterion (ADR-0021).
+- [ ] **Tabla 18:** add rows `activeIssueOf` and `listed`. Decided 2026-10-23.
+- [ ] **Figura 4 (class diagram):** replace with `docs/diagramas/fig04-class-diagram.png` (regenerated 2026-10-27: `activeIssueOf`, `listed`, immutables, constructor, five views, `IssuePhase`).
+- [ ] **Tabla 18:** `BIDDING_PERIOD` / `VOTING_PERIOD` type `uint48 (constante)` → `uint48 (inmutable)`; description: fixed at deployment.
+- [ ] **New table after Tabla 23:** enumeration `IssuePhase` (Bidding, Voting, VotingEnded, Closed).
+- [ ] **Diccionario de datos del simulador** (if the thesis describes off-chain data): supplier name.
+- [ ] Tabla 17: add sprints 2–5 and mark Sprint 1 tasks done.
+- [ ] ADR-0022 (tally method) reasoning where the thesis describes the escrutinio.

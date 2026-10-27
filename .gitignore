@@ -1,7 +1,15 @@
-# Foundry
-contracts/out/
+# Hardhat
+contracts/artifacts/
 contracts/cache/
-contracts/broadcast/
+contracts/typechain-types/
+contracts/coverage/
+contracts/coverage.json
+contracts/ignition/deployments/chain-31337/
+
+# Vite / Expo
+dist/
+mobile/.expo/
+mobile/dist/
 
 # Node
 node_modules/
@@ -37,4 +45,5 @@ Thumbs.db
 
 # Thesis working files
 docs/tesis/**/*.docx
+docs/tesis/**/*.pdf
 ~$*

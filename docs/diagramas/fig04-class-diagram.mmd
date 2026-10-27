@@ -1,0 +1,138 @@
+classDiagram
+direction TB
+
+class CommunityGovernance {
+  <<contract>>
+  +DELEGATION_CAP_DIVISOR : uint32$
+  +REJECT_ALL : uint256$
+  +BIDDING_PERIOD : uint48 «immutable»
+  +VOTING_PERIOD : uint48 «immutable»
+  +registrar : address
+  +quorum : uint32
+  +reservedBalance : uint256
+  +memberList : address[]
+  +nextIssueId : uint256
+  +nextBidId : uint256
+  +isSupplier : mapping⟮address ⇒ bool⟯
+  +listed : mapping⟮address ⇒ bool⟯
+  +activeIssueOf : mapping⟮address ⇒ uint256⟯
+  +hasBid : mapping⟮uint256 ⇒ mapping⟮address ⇒ bool⟯⟯
+  +bidsByIssue : mapping⟮uint256 ⇒ uint256[]⟯
+  +constructor(quorum : uint32, biddingPeriod : uint48, votingPeriod : uint48)
+  +registerMember(member : address, weight : uint32)
+  +removeMember(member : address)
+  +setEligibility(member : address, eligible : bool)
+  +setWeight(member : address, weight : uint32)
+  +registerSupplier(supplier : address)
+  +delegateTo(delegate : address)
+  +revokeDelegation()
+  +createIssue(descriptionCid : string, topic : bytes32, ceiling : uint256) uint256
+  +submitBid(issueId : uint256, amount : uint256, documentCid : string) uint256
+  +castBallot(issueId : uint256, ranking : uint256[])
+  +closeIssue(issueId : uint256)
+  +executeTransfer(issueId : uint256)
+  +weightAt(member : address, time : uint48) uint208
+  +delegateAt(member : address, time : uint48) address
+  +totalWeightAt(time : uint48) uint208
+  +getBids(issueId : uint256) Bid[]
+  +getBallot(issueId : uint256, voter : address) Ballot
+  +phaseOf(issueId : uint256) IssuePhase
+  +availableBalance() uint256
+  +memberCount() uint256
+  +receive()
+}
+
+class GovernanceEvents {
+  <<events>>
+  MemberRegistered(member, weight)
+  MemberRemoved(member)
+  EligibilityChanged(member, eligible)
+  WeightChanged(member, oldWeight, newWeight)
+  SupplierRegistered(supplier)
+  DelegationSet(delegator, delegate)
+  DelegationRevoked(delegator)
+  IssueCreated(issueId, proposer, ceiling)
+  BidSubmitted(issueId, bidId, supplier, amount)
+  BallotCast(issueId, voter)
+  IssueAwarded(issueId, bidId)
+  IssueClosedWithoutAward(issueId)
+  TransferExecuted(issueId, supplier, amount, released)
+}
+
+class Member {
+  <<struct>>
+  +registered : bool
+  +eligible : bool
+  +weight : uint32
+  +delegate : address
+  +receivedWeight : uint32
+}
+
+class Trace208 {
+  <<struct · OZ Checkpoints>>
+  -_checkpoints : Checkpoint208[]
+  +push(key : uint48, value : uint208)
+  +upperLookup(key : uint48) uint208
+  +latest() uint208
+}
+
+class Checkpoint208 {
+  <<struct · OZ Checkpoints>>
+  +_key : uint48
+  +_value : uint208
+}
+
+class Issue {
+  <<struct>>
+  +proposer : address
+  +descriptionCid : string
+  +topic : bytes32
+  +ceiling : uint256
+  +createdAt : uint48
+  +snapshot : uint48
+  +status : IssueStatus
+  +winningBidId : uint256
+}
+
+class IssueStatus {
+  <<enumeration>>
+  Open
+  Awarded
+  Executed
+  ClosedWithoutAward
+}
+
+class IssuePhase {
+  <<enumeration>>
+  Bidding
+  Voting
+  VotingEnded
+  Closed
+}
+
+class Ballot {
+  <<struct>>
+  +cast : bool
+  +ranking : uint256[]
+}
+
+class Bid {
+  <<struct>>
+  +issueId : uint256
+  +supplier : address
+  +amount : uint256
+  +documentCid : string
+}
+
+CommunityGovernance ..> GovernanceEvents : «emit»
+CommunityGovernance "1" *-- "0..*" Member : members [address]
+CommunityGovernance "1" *-- "0..*" Trace208 : weightHistory [address]<br>delegateHistory [address]<br>totalWeightHistory
+CommunityGovernance "1" *-- "0..*" Issue : issues [uint256]
+CommunityGovernance "1" *-- "0..*" Ballot : ballots [uint256, address]
+CommunityGovernance "1" *-- "0..*" Bid : bids [uint256]
+CommunityGovernance ..> IssuePhase : phaseOf
+Trace208 "1" *-- "0..*" Checkpoint208
+Issue --> IssueStatus : status
+Issue "1" -- "0..*" Ballot : una por votante
+Issue "1" -- "0..*" Bid : bidsByIssue
+Ballot ..> Bid : ranking (ids)
