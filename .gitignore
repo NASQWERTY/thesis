@@ -1,7 +1,7 @@
 # Hardhat
 contracts/artifacts/
 contracts/cache/
-contracts/typechain-types/
+contracts/types/
 contracts/coverage/
 contracts/coverage.json
 contracts/ignition/deployments/chain-31337/

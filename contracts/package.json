@@ -1,0 +1,33 @@
+{
+  "name": "community-governance-contracts",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "hardhat test",
+    "build": "hardhat build",
+    "node": "hardhat node"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ethers": "^4.2.1",
+    "@nomicfoundation/hardhat-ethers-chai-matchers": "^3.0.13",
+    "@nomicfoundation/hardhat-ignition": "^3.1.9",
+    "@nomicfoundation/hardhat-ignition-ethers": "^3.1.6",
+    "@nomicfoundation/hardhat-keystore": "^3.1.2",
+    "@nomicfoundation/hardhat-mocha": "^4.0.1",
+    "@nomicfoundation/hardhat-network-helpers": "^3.0.12",
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^4.0.0",
+    "@nomicfoundation/hardhat-typechain": "^3.1.3",
+    "@nomicfoundation/hardhat-verify": "^3.1.4",
+    "@nomicfoundation/ignition-core": "^3.1.11",
+    "@openzeppelin/contracts": "^5.6.1",
+    "@types/chai": "^5.2.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^26.6.5",
+    "chai": "^6.3.0",
+    "ethers": "^6.17.0",
+    "hardhat": "^3.21.1",
+    "mocha": "^12.0.3",
+    "typescript": "~5.9"
+  }
+}
