@@ -6,6 +6,9 @@ contracts/coverage/
 contracts/coverage.json
 contracts/ignition/deployments/chain-31337/
 
+# Local-chain deployment changes on every node restart; testnet ones are committed
+shared/deployments/31337.json
+
 # Vite / Expo
 dist/
 mobile/.expo/

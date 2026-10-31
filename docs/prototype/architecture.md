@@ -42,7 +42,7 @@ inside the app bundle. The member app can call the same endpoint the supplier po
 contracts/
   contracts/CommunityGovernance.sol
   test/*.ts
-  scripts/deploy.ts         # writes shared/deployment.json (address, chainId, ABI)
+  scripts/deploy.ts         # writes shared/deployments/<chainId>.json
   hardhat.config.ts
 simulator/
   data/members.csv          # unit,owner,address,weight   (sample, fake owners)
@@ -50,9 +50,15 @@ simulator/
   src/cli.ts
 supplier-portal/
 mobile/
-shared/deployment.json
+shared/deployments/
+  31337.json                # local chain (`npm run node`) — not committed, changes per restart
+  421614.json               # Arbitrum Sepolia — committed
 docs/
 ```
+
+Each deployment file holds `address`, `chainId`, `registrar`, `deployBlock` (clients read events
+from it), the constructor `params` and the `abi`. One file per chain so a client can switch
+between the local chain and the testnet without redeploying.
 
 Legacy folders from the old scope — `circuits/`, `simulation/`, the nested `tfg-dao/` and
 `tfg-dao.tar.gz` — are not part of this design. Propose removing them; don't delete without OK.
@@ -61,13 +67,13 @@ Legacy folders from the old scope — `circuits/`, `simulation/`, the nested `tf
 
 ```
 ARBITRUM_SEPOLIA_RPC_URL=
-ARBISCAN_API_KEY=            # contract verification
+ETHERSCAN_API_KEY=           # contract verification (Etherscan API v2 key covers Arbiscan)
 DEPLOYER_PRIVATE_KEY=        # = registrar in the prototype; throwaway testnet key
 PINATA_JWT=
 PINATA_GATEWAY=              # e.g. <name>.mypinata.cloud
-QUORUM=                      # OPEN-1
-BIDDING_PERIOD_SECONDS=      # OPEN-2
-VOTING_PERIOD_SECONDS=       # OPEN-2
+QUORUM=                      # OPEN-1 — required on the testnet; local default 4
+BIDDING_PERIOD_SECONDS=      # required on the testnet; local default 300
+VOTING_PERIOD_SECONDS=       # required on the testnet; local default 600
 ```
 
 ## Demo accounts

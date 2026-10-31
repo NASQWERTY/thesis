@@ -191,6 +191,14 @@ contract CommunityGovernance {
     }
 
     // ---------------------------------------------------------------------
+    // Treasury
+    // ---------------------------------------------------------------------
+
+    /// @notice Anyone can fund the treasury. Funding mechanisms are out of scope; the demo is
+    /// funded from a faucet.
+    receive() external payable {}
+
+    // ---------------------------------------------------------------------
     // Views
     // ---------------------------------------------------------------------
 
