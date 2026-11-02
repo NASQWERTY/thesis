@@ -1,0 +1,6 @@
+# Proveedores de ejemplo para la cadena local (nombres ficticios).
+# Direcciones: cuentas 9 a 11 de Hardhat. El nombre queda solo acá, no va a la cadena.
+nombre,direccion
+Ascensores Andinos SRL,0xa0Ee7A142d267C1f36714E4a8F75612F20a79720
+Pinturas del Sur SA,0xBcd4042DE499D14e55001CcbB24a551F3b954096
+Electricidad Serrana,0x71bE63f3384f5fb98995898A86B02Fb2426c5788

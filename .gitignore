@@ -9,6 +9,9 @@ contracts/ignition/deployments/chain-31337/
 # Local-chain deployment changes on every node restart; testnet ones are committed
 shared/deployments/31337.json
 
+# Simulator-generated demo account keys
+simulator/accounts.*.json
+
 # Vite / Expo
 dist/
 mobile/.expo/

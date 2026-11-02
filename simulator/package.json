@@ -1,0 +1,17 @@
+{
+  "name": "enrollment-simulator",
+  "version": "1.0.0",
+  "scripts": {
+    "sim": "node --disable-warning=ExperimentalWarning src/cli.ts",
+    "typecheck": "tsc"
+  },
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "ethers": "^6.17.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "~5.9"
+  }
+}
