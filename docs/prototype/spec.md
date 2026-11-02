@@ -31,14 +31,17 @@ Members ∩ suppliers = ∅ (ADR-0021).
 | `VOTING_PERIOD` | `uint48` immutable | voting window length, seconds, starts when bidding ends | set in constructor |
 | `DELEGATION_CAP_DIVISOR` | `uint32` constant | cap = total eligible weight / 3 | `3` |
 | `REJECT_ALL` | `uint256` constant | "rechazar todas" candidate id inside a ballot | `0` |
-| `quorum` | `uint32` | minimum expressed weight for an issue to be awardable, in weight units | set in constructor, value **[OPEN-1]** |
+| `QUORUM_PERCENT` | `uint8` immutable | minimum expressed weight for an issue to be awardable, as a percentage (1–100) of `totalWeightAt(snapshot)` | set in constructor; **50** by default (deploy script) |
 
 **Decided 2026-10-27 (OPEN-2):** the periods are `immutable`, set once at deployment —
 identical for every issue (ADR-0018 holds) and short on the testnet demo.
 
+**Decided 2026-11-02 (OPEN-1, ADR-0023):** the quorum is a percentage of the eligible weight at
+the issue's snapshot, not an absolute weight, so it follows the registry as it changes.
+
 ```solidity
-constructor(uint32 quorum_, uint48 biddingPeriod_, uint48 votingPeriod_)
-// registrar = msg.sender; reject zero values
+constructor(uint8 quorumPercent_, uint48 biddingPeriod_, uint48 votingPeriod_)
+// registrar = msg.sender; reject zero periods; reject quorumPercent_ == 0 or > 100
 ```
 
 ---
@@ -203,7 +206,9 @@ expressedWeight = Σ w[v]
 
 **Outcome:**
 1. no bids → `ClosedWithoutAward`
-2. `expressedWeight < quorum` → `ClosedWithoutAward`
+2. no quorum → `ClosedWithoutAward`. Quorum is reached iff `expressedWeight > 0` and
+   `expressedWeight * 100 >= QUORUM_PERCENT * totalWeightAt(snapshot)` (integer arithmetic, no
+   rounding: with total 7 and 50 %, 4 is needed — 3.5 rounds up)
 3. tally (§5); no unique winner → `ClosedWithoutAward`
 4. winner == `REJECT_ALL` → `ClosedWithoutAward`
 5. else `Awarded`, `winningBidId = winner`
@@ -245,16 +250,23 @@ Candidates `C = {REJECT_ALL} ∪ bidsByIssue[issueId]` (n = bids + 1).
 Ballots are complete rankings, so for each pair (a, b):
 `P[a][b] = Σ w[v]` over voters ranking a above b.
 
-**Method: [OPEN-3]** — ADR-0020 deferred the choice to Entregable 4 (needs ADR-0022):
-- **Option A — simple Condorcet:** winner = candidate with `P[x][y] > P[y][x]` for every y ≠ x.
-  None ⇒ no unique winner.
-- **Option B — Schulze:** strongest-path widths `S` via Floyd–Warshall on `P`
-  (`d[a][b] = P[a][b]` if `P[a][b] > P[b][a]` else 0); winner = x with `S[x][y] > S[y][x]`
-  for every y ≠ x. None ⇒ no unique winner (tie).
+**Method: Schulze** (decided 2026-11-02, ADR-0022; OPEN-3):
 
-Either way: **no unique winner ⇒ close without award** (ADR-0020). Implement the tally as an
+```
+d[a][b] = P[a][b] if P[a][b] > P[b][a] else 0          // direct defeats only
+S = d
+for k in C: for i in C: for j in C (i, j, k distinct):  // Floyd–Warshall, widest path
+    S[i][j] = max(S[i][j], min(S[i][k], S[k][j]))
+winner = the x with S[x][y] > S[y][x] for every y ≠ x
+```
+
+At most one candidate can satisfy the winner condition. If none does (tie between strongest
+paths), there is **no unique winner ⇒ close without award** (ADR-0020). A Condorcet winner, when
+one exists, is always the Schulze winner. Implement the tally as an
 internal pure function over `(uint256[][] rankings, uint256[] weights, uint256 n)` so it can
-be unit-tested in isolation with crafted ballots (cycle, tie, clear winner, REJECT_ALL wins).
+be unit-tested in isolation with crafted ballots: clear (Condorcet) winner, cycle resolved by
+Schulze (e.g. weights 4/3/2 over A>B>C, B>C>A, C>A>B → A), symmetric cycle with equal weights
+(tie → no award), REJECT_ALL wins, single bid vs REJECT_ALL (plain majority).
 
 ---
 
@@ -318,3 +330,5 @@ Resolved 2026-10-23 (the author updates the document; see `thesis-sync.md`):
 
 4. Periods are `immutable` with a constructor; five views and `IssuePhase` added (2026-10-27).
    Figura 4 regenerated: `docs/diagramas/fig04-class-diagram.mmd` (source) and `.png`.
+5. Quorum as a percentage (`QUORUM_PERCENT`, ADR-0023) instead of absolute weight; tally method
+   Schulze (ADR-0022). Both decided 2026-11-02.

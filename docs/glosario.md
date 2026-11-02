@@ -68,7 +68,7 @@ los términos en español.
 | `Bid` / `submitBid` | Oferta / presentar oferta |
 | `Ballot` / `castBallot` / `ranking` | Boleta / emitir boleta / orden de preferencias |
 | `REJECT_ALL` | "Rechazar todas" |
-| `quorum` | Quórum |
+| `QUORUM_PERCENT` | Quórum (porcentaje del peso habilitado en el snapshot) |
 | `closeIssue` | Cierre (y adjudicación) |
 | `Awarded` / `winningBidId` | Adjudicada / oferta adjudicada |
 | `ClosedWithoutAward` | Cerrada sin adjudicación |

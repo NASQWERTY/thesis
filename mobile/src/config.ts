@@ -4,7 +4,7 @@ export interface Deployment {
   address: string;
   chainId: number;
   deployBlock: number;
-  params: { quorum: number; biddingPeriod: number; votingPeriod: number };
+  params: { quorumPercent: number; biddingPeriod: number; votingPeriod: number };
   abi: unknown[];
 }
 

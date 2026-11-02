@@ -8,7 +8,7 @@ class CommunityGovernance {
   +BIDDING_PERIOD : uint48 «immutable»
   +VOTING_PERIOD : uint48 «immutable»
   +registrar : address
-  +quorum : uint32
+  +QUORUM_PERCENT : uint8 «immutable»
   +reservedBalance : uint256
   +memberList : address[]
   +nextIssueId : uint256
@@ -18,7 +18,7 @@ class CommunityGovernance {
   +activeIssueOf : mapping⟮address ⇒ uint256⟯
   +hasBid : mapping⟮uint256 ⇒ mapping⟮address ⇒ bool⟯⟯
   +bidsByIssue : mapping⟮uint256 ⇒ uint256[]⟯
-  +constructor(quorum : uint32, biddingPeriod : uint48, votingPeriod : uint48)
+  +constructor(quorumPercent : uint8, biddingPeriod : uint48, votingPeriod : uint48)
   +registerMember(member : address, weight : uint32)
   +removeMember(member : address)
   +setEligibility(member : address, eligible : bool)

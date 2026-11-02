@@ -197,7 +197,7 @@ async function list(c: Connection) {
   const balance = await c.provider.getBalance(c.deployment.address);
   console.log(`\nTesorería: ${formatEther(balance)} ETH`);
   console.log(
-    `Parámetros: quórum ${c.deployment.params.quorum}, ofertas ${c.deployment.params.biddingPeriod} s, ` +
+    `Parámetros: quórum ${c.deployment.params.quorumPercent} %, ofertas ${c.deployment.params.biddingPeriod} s, ` +
       `votación ${c.deployment.params.votingPeriod} s`,
   );
 }

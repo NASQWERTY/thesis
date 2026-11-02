@@ -20,7 +20,7 @@ npm install
 |---|---|
 | `npm run build` | Compiles the contracts → `artifacts/` (ABI + bytecode) and `types/` (TypeScript types) |
 | `npm test` | Compiles and runs every test in `test/` on a fresh in-memory chain |
-| `npx hardhat test --grep "zero quorum"` | Runs only the tests whose name matches |
+| `npx hardhat test --grep "quorum"` | Runs only the tests whose name matches |
 | `npm run node` | Starts a local chain on port 8545 with 20 funded accounts, reachable from the LAN (Ctrl+C to stop) |
 | `npm run deploy:local` | Deploys to the node above → `shared/deployments/31337.json` |
 | `npm run deploy:sepolia` | Deploys to Arbitrum Sepolia → `shared/deployments/421614.json` |
@@ -42,8 +42,8 @@ npm run deploy:local    # terminal 2
 ```
 
 The node keeps state in memory only: after restarting it, deploy again. The first account
-(`0xf39F…2266`) deploys and is therefore the registrar. Local defaults: quorum 4, bidding 300 s,
-voting 600 s (override with `QUORUM`, `BIDDING_PERIOD_SECONDS`, `VOTING_PERIOD_SECONDS`).
+(`0xf39F…2266`) deploys and is therefore the registrar. Defaults: quorum 50 % (every network); bidding 300 s,
+voting 600 s on the local chain only (override with `QUORUM_PERCENT`, `BIDDING_PERIOD_SECONDS`, `VOTING_PERIOD_SECONDS`).
 
 From a phone on the same WiFi, the RPC URL is `http://<PC LAN IP>:8545`; from the Android
 emulator, `http://10.0.2.2:8545`. Windows may ask to allow Node.js through the firewall the

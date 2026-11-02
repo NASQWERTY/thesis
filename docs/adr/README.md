@@ -28,5 +28,7 @@ already reasoned and dated when you get to writing it.
 | [0017](0017-registro-proveedores-precargado-por-el-registrador.md) | Registro de proveedores precargado por el registrador | Aceptada |
 | [0018](0018-parametros-del-planteo-plazo-fijo-snapshot-y-adjuntos-en-ipfs.md) | Plazos fijos, snapshot al crear, adjuntos en IPFS | Aceptada |
 | [0019](0019-delegacion-salto-unico-tope-de-peso-y-boleta-inmutable.md) | Delegación de salto único, tope 1/3, boleta inmutable | Aceptada |
-| [0020](0020-resolucion-del-escrutinio-y-cierre-conservador.md) | Escrutinio por pares; ambigüedad cierra sin adjudicación | Aceptada |
+| [0020](0020-resolucion-del-escrutinio-y-cierre-conservador.md) | Escrutinio por pares; ambigüedad cierra sin adjudicación | Precisada por 0022, 0023 |
 | [0021](0021-miembros-y-proveedores-disjuntos.md) | Miembros y proveedores disjuntos | Aceptada |
+| [0022](0022-metodo-de-escrutinio-schulze.md) | Método de escrutinio: Schulze | Aceptada |
+| [0023](0023-quorum-como-porcentaje-del-peso-habilitado.md) | Quórum como porcentaje del peso habilitado en el snapshot | Aceptada |

@@ -71,7 +71,7 @@ ETHERSCAN_API_KEY=           # contract verification (Etherscan API v2 key cover
 DEPLOYER_PRIVATE_KEY=        # = registrar in the prototype; throwaway testnet key
 PINATA_JWT=
 PINATA_GATEWAY=              # e.g. <name>.mypinata.cloud
-QUORUM=                      # OPEN-1 — required on the testnet; local default 4
+QUORUM_PERCENT=              # % of eligible weight at the snapshot; default 50 (ADR-0023)
 BIDDING_PERIOD_SECONDS=      # required on the testnet; local default 300
 VOTING_PERIOD_SECONDS=       # required on the testnet; local default 600
 ```

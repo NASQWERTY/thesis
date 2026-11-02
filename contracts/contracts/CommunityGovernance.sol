@@ -25,7 +25,7 @@ contract CommunityGovernance {
     // Errors
     // ---------------------------------------------------------------------
 
-    error ZeroQuorum();
+    error InvalidQuorumPercent();
     error ZeroPeriod();
     error NotRegistrar();
     error ZeroAddress();
@@ -62,8 +62,9 @@ contract CommunityGovernance {
     /// @notice Voting window length in seconds, starting when bidding ends.
     uint48 public immutable VOTING_PERIOD;
 
-    /// @notice Minimum expressed weight for an issue to be awardable, in weight units.
-    uint32 public immutable quorum;
+    /// @notice Minimum expressed weight for an issue to be awardable, as a percentage (1–100) of
+    /// the total eligible weight at the issue's snapshot (ADR-0023).
+    uint8 public immutable QUORUM_PERCENT;
 
     // ---------------------------------------------------------------------
     // State (spec §3)
@@ -92,12 +93,12 @@ contract CommunityGovernance {
     // Constructor
     // ---------------------------------------------------------------------
 
-    constructor(uint32 quorum_, uint48 biddingPeriod_, uint48 votingPeriod_) {
-        if (quorum_ == 0) revert ZeroQuorum();
+    constructor(uint8 quorumPercent_, uint48 biddingPeriod_, uint48 votingPeriod_) {
+        if (quorumPercent_ == 0 || quorumPercent_ > 100) revert InvalidQuorumPercent();
         if (biddingPeriod_ == 0 || votingPeriod_ == 0) revert ZeroPeriod();
 
         registrar = msg.sender;
-        quorum = quorum_;
+        QUORUM_PERCENT = quorumPercent_;
         BIDDING_PERIOD = biddingPeriod_;
         VOTING_PERIOD = votingPeriod_;
     }
