@@ -34,7 +34,7 @@ class CommunityGovernance {
   +weightAt(member : address, time : uint48) uint208
   +delegateAt(member : address, time : uint48) address
   +totalWeightAt(time : uint48) uint208
-  +getBids(issueId : uint256) Bid[]
+  +getBids(issueId : uint256) (uint256[], Bid[])
   +getBallot(issueId : uint256, voter : address) Ballot
   +phaseOf(issueId : uint256) IssuePhase
   +availableBalance() uint256

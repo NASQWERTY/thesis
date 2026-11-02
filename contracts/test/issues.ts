@@ -1,33 +1,20 @@
 import { expect } from "chai";
-import { BIDDING_PERIOD, deployFixture, ethers, networkHelpers, VOTING_PERIOD } from "./helpers.js";
+import {
+  BIDDING_PERIOD,
+  CID,
+  communityFixture,
+  deployFixture,
+  ethers,
+  networkHelpers,
+  Phase,
+  Status,
+  TOPIC,
+  TREASURY,
+  VOTING_PERIOD,
+  withIssueFixture,
+} from "./helpers.js";
 
 const { time } = networkHelpers;
-
-const CID = "bafkreigh2akiscaildcqabsyg3dfr6chu3fgpregiymsck7e7aqa4s52zy";
-const TOPIC = ethers.encodeBytes32String("mantenimiento");
-const TREASURY = ethers.parseEther("10");
-
-// IssueStatus / IssuePhase as numbers (ethers returns enums as bigint).
-const Status = { Open: 0n, Awarded: 1n, Executed: 2n, ClosedWithoutAward: 3n };
-const Phase = { Bidding: 0n, Voting: 1n, VotingEnded: 2n, Closed: 3n };
-
-/** alice and bob are eligible members, carol is a supplier, the treasury holds 10 ETH. */
-async function communityFixture() {
-  const f = await deployFixture();
-  await f.gov.registerMember(f.alice.address, 1);
-  await f.gov.registerMember(f.bob.address, 1);
-  await f.gov.registerSupplier(f.carol.address);
-  await f.registrar.sendTransaction({ to: f.gov, value: TREASURY });
-  return f;
-}
-
-/** communityFixture + alice's issue #1 with a 4 ETH ceiling. */
-async function withIssueFixture() {
-  const f = await communityFixture();
-  await f.gov.connect(f.alice).createIssue(CID, TOPIC, ethers.parseEther("4"));
-  const createdAt = BigInt(await time.latest());
-  return { ...f, issueId: 1n, createdAt };
-}
 
 describe("HU-003 issue creation", function () {
   describe("createIssue", function () {

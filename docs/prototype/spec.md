@@ -237,7 +237,7 @@ Views (all in Figura 4, decided 2026-10-27):
 | `weightAt(member, time)` | `uint208` | effective weight at a time (checkpoint) |
 | `delegateAt(member, time)` | `address` | delegate at a time (checkpoint) |
 | `totalWeightAt(time)` | `uint208` | total eligible weight at a time |
-| `getBids(issueId)` | `Bid[]` | the auto-getter of `bidsByIssue` returns one element per index |
+| `getBids(issueId)` | `(uint256[] ids, Bid[] list)` | the auto-getter of `bidsByIssue` returns one element per index; `ids[i]` is the id of `list[i]`, which a ballot needs to rank it (the `Bid` struct has no id field). Changed 2026-11-02 from `Bid[]` |
 | `getBallot(issueId, voter)` | `Ballot` | the auto-getter of `ballots` does not return the `ranking` array |
 | `phaseOf(issueId)` | `IssuePhase` | single source of the phase rule for every client |
 | `availableBalance()` | `uint256` | `address(this).balance - reservedBalance` ("saldo libre", Fig. 6) |

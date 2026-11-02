@@ -12,6 +12,7 @@ here; the author updates the document and ticks the item.
 - [ ] **Tabla 9 (HU-002) / ADR-0021 (decided 2026-10-27):** the cross-registration check also rejects an address that **was** a member and was removed (not only current members, eligible or not). Reason: a removed member can still vote on issues created before the removal.
 - [ ] **Member app wallet (OPEN-7, decided 2026-10-27):** the app holds an imported testnet key and signs locally (no external wallet). Declare it as a prototype limitation; check the architecture figure (Fig. 10–11) and any text that mentions MetaMask/WalletConnect for the member app.
 - [ ] **Tabla 25 (eventos), decided 2026-11-02:** add `TreasuryFunded(address indexed from, uint256 amount)`, emitted by `receive()` on every contribution to the treasury. Reason: the consultable history must show where the treasury funds came from. Also in Figura 4's event list (`.mmd` updated).
+- [ ] **`getBids` (decided 2026-11-02):** returns `(uint256[] ids, Bid[] list)` instead of `Bid[]` — the `Bid` struct has no id field and a ballot ranks bids by id. Update Figura 4 (`.mmd` updated) and wherever the views are listed.
 - [ ] **Tabla 18:** `BIDDING_PERIOD` / `VOTING_PERIOD` type `uint48 (constante)` → `uint48 (inmutable)`; description: fixed at deployment.
 - [ ] **New table after Tabla 23:** enumeration `IssuePhase` (Bidding, Voting, VotingEnded, Closed).
 - [ ] **Diccionario de datos del simulador** (if the thesis describes off-chain data): supplier name.

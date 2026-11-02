@@ -47,6 +47,13 @@ contract CommunityGovernance {
         uint256 winningBidId; // 0 unless awarded
     }
 
+    struct Bid {
+        uint256 issueId;
+        address supplier;
+        uint256 amount; // wei, at most the issue ceiling; what the supplier is paid if awarded
+        string documentCid; // IPFS CID of the proposal document, uploaded by the supplier portal
+    }
+
     // ---------------------------------------------------------------------
     // Errors
     // ---------------------------------------------------------------------
@@ -67,6 +74,11 @@ contract CommunityGovernance {
     error InsufficientFunds(uint256 available, uint256 requested);
     error ActiveIssueExists(uint256 issueId);
     error IssueNotFound(uint256 issueId);
+    error NotSupplier(address account);
+    error NotInBiddingPhase(uint256 issueId);
+    error AlreadyBid(uint256 issueId, address supplier);
+    error ZeroAmount();
+    error AmountAboveCeiling(uint256 ceiling, uint256 amount);
 
     // ---------------------------------------------------------------------
     // Events (spec §6)
@@ -78,6 +90,7 @@ contract CommunityGovernance {
     event WeightChanged(address indexed member, uint32 oldWeight, uint32 newWeight);
     event SupplierRegistered(address indexed supplier);
     event IssueCreated(uint256 indexed issueId, address indexed proposer, uint256 ceiling);
+    event BidSubmitted(uint256 indexed issueId, uint256 indexed bidId, address indexed supplier, uint256 amount);
     event TreasuryFunded(address indexed from, uint256 amount);
 
     // ---------------------------------------------------------------------
@@ -133,6 +146,17 @@ contract CommunityGovernance {
 
     /// @notice The proposer's issue in Open status, 0 if none (one open issue per proposer, HU-003).
     mapping(address => uint256) public activeIssueOf;
+
+    /// @notice Id of the next bid. Starts at 1: inside a ballot, 0 is REJECT_ALL.
+    uint256 public nextBidId = 1;
+
+    mapping(uint256 => Bid) public bids;
+
+    /// @notice Bid ids of each issue, in submission order (the tally candidates, plus REJECT_ALL).
+    mapping(uint256 => uint256[]) public bidsByIssue;
+
+    /// @notice One bid per supplier per issue (ADR-0019).
+    mapping(uint256 => mapping(address => bool)) public hasBid;
 
     // ---------------------------------------------------------------------
     // Constructor
@@ -274,6 +298,35 @@ contract CommunityGovernance {
     }
 
     // ---------------------------------------------------------------------
+    // Bids (HU-004)
+    // ---------------------------------------------------------------------
+
+    /// @notice A registered supplier submits one bid per issue during its bidding window.
+    /// @param amount What the supplier asks to be paid, in wei; at most the issue ceiling.
+    /// @param documentCid IPFS CID of the proposal, uploaded by the supplier portal.
+    function submitBid(uint256 issueId, uint256 amount, string calldata documentCid)
+        external
+        returns (uint256 bidId)
+    {
+        if (!isSupplier[msg.sender]) revert NotSupplier(msg.sender);
+        Issue storage issue = _issue(issueId);
+        if (issue.status != IssueStatus.Open || block.timestamp >= _biddingEnd(issue)) {
+            revert NotInBiddingPhase(issueId);
+        }
+        if (hasBid[issueId][msg.sender]) revert AlreadyBid(issueId, msg.sender);
+        if (amount == 0) revert ZeroAmount();
+        if (amount > issue.ceiling) revert AmountAboveCeiling(issue.ceiling, amount);
+        if (bytes(documentCid).length == 0) revert EmptyCid();
+
+        bidId = nextBidId++;
+        bids[bidId] = Bid({issueId: issueId, supplier: msg.sender, amount: amount, documentCid: documentCid});
+        bidsByIssue[issueId].push(bidId);
+        hasBid[issueId][msg.sender] = true;
+
+        emit BidSubmitted(issueId, bidId, msg.sender, amount);
+    }
+
+    // ---------------------------------------------------------------------
     // Treasury
     // ---------------------------------------------------------------------
 
@@ -311,10 +364,21 @@ contract CommunityGovernance {
         Issue storage issue = _issue(issueId);
         if (issue.status != IssueStatus.Open) return IssuePhase.Closed;
 
-        uint256 biddingEnd = uint256(issue.createdAt) + BIDDING_PERIOD;
+        uint256 biddingEnd = _biddingEnd(issue);
         if (block.timestamp < biddingEnd) return IssuePhase.Bidding;
         if (block.timestamp < biddingEnd + VOTING_PERIOD) return IssuePhase.Voting;
         return IssuePhase.VotingEnded;
+    }
+
+    /// @notice Every bid of an issue, in submission order. `ids[i]` is the id of `list[i]`: the
+    /// value a ballot uses to rank it. (The auto-getter of `bidsByIssue` returns one id per call.)
+    function getBids(uint256 issueId) external view returns (uint256[] memory ids, Bid[] memory list) {
+        _issue(issueId);
+        ids = bidsByIssue[issueId];
+        list = new Bid[](ids.length);
+        for (uint256 i = 0; i < ids.length; i++) {
+            list[i] = bids[ids[i]];
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -334,6 +398,11 @@ contract CommunityGovernance {
         Member storage m = members[account];
         if (!m.registered) revert NotRegistered(account);
         if (!m.eligible) revert NotEligible(account);
+    }
+
+    /// @dev First second after the bidding window; voting starts here.
+    function _biddingEnd(Issue storage issue) private view returns (uint256) {
+        return uint256(issue.createdAt) + BIDDING_PERIOD;
     }
 
     /// @dev Issues exist from id 1 to nextIssueId - 1; every one has a proposer.
