@@ -48,6 +48,7 @@ simulator/
   data/members.csv          # unit,owner,address,weight   (sample, fake owners)
   data/suppliers.csv        # name,address
   src/cli.ts
+uploader/                   # holds the Pinata JWT; POST /upload → CID (portal and app)
 supplier-portal/
 mobile/
 shared/deployments/

@@ -4,7 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { formatEther, getAddress, isAddress, parseEther, Wallet } from "ethers";
+import { Contract, encodeBytes32String, formatEther, getAddress, isAddress, parseEther, Wallet } from "ethers";
 import QRCode from "qrcode";
 import { connect, dataDir, hardhatAccount, type Connection, type NetworkName } from "./chain.ts";
 import { readMembers, readSuppliers, type MemberRow, type SupplierRow } from "./csv.ts";
@@ -29,6 +29,12 @@ Comandos:
                               (--html genera una página para abrir en el navegador)
   accounts <n>                Genera n cuentas nuevas para la testnet (sepolia)
 
+Solo red local (demo):
+  issue <miembro> <techo> [descripción] [--topic t]
+                              Plantea una cuestión en nombre del miembro (techo en ETH).
+                              Sube la descripción con el uploader si está corriendo
+  time <segundos>             Adelanta el reloj de la cadena (p. ej. para cerrar las ofertas)
+
 <miembro> es una dirección o una unidad del CSV de miembros (p. ej. T1-1A).
 Por defecto se usan data/<red>/members.csv y data/<red>/suppliers.csv.`;
 
@@ -38,6 +44,7 @@ const { values: opts, positionals } = parseArgs({
     network: { type: "string", short: "n", default: "local" },
     html: { type: "boolean" },
     issue: { type: "string" },
+    topic: { type: "string", default: "general" },
     help: { type: "boolean", short: "h" },
   },
 });
@@ -310,6 +317,75 @@ async function accounts(countArg?: string) {
   for (const w of wallets) console.log(`  ${w.address}`);
 }
 
+/** Uploads text through the uploader service; null if it is not running. */
+async function uploadText(name: string, text: string): Promise<string | null> {
+  const url = process.env.UPLOADER_URL || "http://127.0.0.1:8787";
+  const body = new FormData();
+  body.append("file", new Blob([text], { type: "text/plain;charset=utf-8" }), name);
+  try {
+    const response = await fetch(`${url}/upload`, { method: "POST", body });
+    const json = (await response.json()) as { cid?: string; error?: string };
+    if (!response.ok || !json.cid) throw new UserError(`El uploader rechazó la subida: ${json.error ?? response.status}`);
+    return json.cid;
+  } catch (err) {
+    if (err instanceof UserError) throw err;
+    return null; // not running
+  }
+}
+
+// Placeholder used when the uploader is not running: the contract only checks the CID is not empty.
+const PLACEHOLDER_CID = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+
+/** Demo only: raises an issue signing with the member's local Hardhat key. */
+async function issue(c: Connection, memberArg?: string, ceilingArg?: string, description?: string) {
+  if (network !== "local") throw new UserError("Solo en la red local: en testnet el simulador no tiene las claves de los miembros.");
+  const member = await resolveMember(memberArg);
+  let ceiling: bigint;
+  try {
+    ceiling = parseEther(ceilingArg ?? "");
+  } catch {
+    throw new UserError("Indicá el techo en ETH, p. ej. 2.5");
+  }
+  const key = (await demoKeys())(member);
+  if (!key) throw new UserError(`No hay clave local para ${member}`);
+
+  const text = description ?? "Cuestión de prueba creada desde el simulador.";
+  let cid = await uploadText("descripcion.txt", text);
+  if (cid) console.log(`  Descripción subida a IPFS: ${cid}`);
+  else {
+    cid = PLACEHOLDER_CID;
+    console.log("  Aviso: el uploader no está corriendo; se usa un CID de ejemplo.");
+  }
+
+  const gov = c.gov.connect(new Wallet(key, c.provider)) as Contract;
+  const topic = encodeBytes32String(opts.topic!.slice(0, 31));
+  let issueId: bigint | undefined;
+  await send(c, `Cuestión de ${await label(member)} con techo ${ceilingArg} ETH`, async () => {
+    const tx = await gov.createIssue(cid, topic, ceiling);
+    return {
+      wait: async () => {
+        const receipt = await tx.wait();
+        for (const log of receipt.logs) {
+          const parsed = gov.interface.parseLog(log);
+          if (parsed?.name === "IssueCreated") issueId = parsed.args.issueId;
+        }
+      },
+    };
+  });
+  if (issueId !== undefined) console.log(`Cuestión #${issueId} en fase de ofertas.`);
+}
+
+/** Demo only: moves the local chain's clock forward and mines a block. */
+async function advanceTime(c: Connection, secondsArg?: string) {
+  if (network !== "local") throw new UserError("Solo en la red local: el tiempo de la testnet no se puede adelantar.");
+  const seconds = Number(secondsArg);
+  if (!Number.isInteger(seconds) || seconds <= 0) throw new UserError("Indicá los segundos, p. ej. time 300");
+  await c.provider.send("evm_increaseTime", [seconds]);
+  await c.provider.send("evm_mine", []);
+  const block = (await c.provider.getBlock("latest"))!;
+  console.log(`Reloj adelantado ${seconds} s. Hora de la cadena: ${new Date(block.timestamp * 1000).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "medium" })}`);
+}
+
 function issueArg(): bigint | undefined {
   if (opts.issue === undefined) return undefined;
   if (!/^[0-9]+$/.test(opts.issue)) throw new UserError("--issue debe ser el número de la cuestión");
@@ -337,6 +413,8 @@ async function main() {
     weight: (c) => weight(c, args[0], args[1]),
     remove: (c) => remove(c, args[0]),
     list: (c) => list(c),
+    issue: (c) => issue(c, args[0], args[1], args.slice(2).join(" ") || undefined),
+    time: (c) => advanceTime(c, args[0]),
     history: async (c) => history(c, await membersByAddress(), await suppliersByAddress(), issueArg()),
     fund: (c) => fund(c, args[0]),
   };

@@ -21,7 +21,7 @@ npm install
 | `npm run build` | Compiles the contracts → `artifacts/` (ABI + bytecode) and `types/` (TypeScript types) |
 | `npm test` | Compiles and runs every test in `test/` on a fresh in-memory chain |
 | `npx hardhat test --grep "quorum"` | Runs only the tests whose name matches |
-| `npm run node` | Starts a local chain on port 8545 with 20 funded accounts, reachable from the LAN (Ctrl+C to stop) |
+| `npm run node` | Starts a local chain on port 8545 with 20 funded accounts, reachable from the LAN, mining a block every second like a real chain (Ctrl+C to stop) |
 | `npm run deploy:local` | Deploys to the node above → `shared/deployments/31337.json` |
 | `npm run deploy:sepolia` | Deploys to Arbitrum Sepolia → `shared/deployments/421614.json` |
 

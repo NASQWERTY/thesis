@@ -34,6 +34,13 @@ npm run sim -- <command> [args] [--network local|sepolia]    # default: local
 | `qr [member] [--html]` | QR code of each member's key (all, or one) for the member app to scan. `--html` writes `qr.<network>.html` (not committed) to open in a browser |
 | `accounts <n>` | Generates `n` new accounts for the testnet → `accounts.sepolia.json` (not committed) |
 
+Local chain only (demo):
+
+| Command | What it does |
+|---|---|
+| `issue <member> <ceiling> [description] [--topic t]` | Raises an issue on behalf of a member (signs with its local Hardhat key). Uploads the description through the uploader if it is running; otherwise uses a placeholder CID |
+| `time <seconds>` | Moves the chain clock forward, e.g. to end the bidding window |
+
 `<member>` is an address or a unit from the members CSV (e.g. `T1-1A`).
 
 ## Data
