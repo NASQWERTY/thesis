@@ -1,0 +1,30 @@
+{
+  "name": "member-app",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "ethers": "^6.17.0",
+    "expo": "~58.0.22",
+    "expo-constants": "~58.0.14",
+    "expo-secure-store": "~58.0.2",
+    "expo-status-bar": "~58.0.4",
+    "react": "19.3.0",
+    "react-native": "0.88.1",
+    "react-native-get-random-values": "^2.1.0",
+    "react-native-safe-area-context": "~5.10.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.3.0",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "prestart": "node scripts/sync-deployments.mjs",
+    "postinstall": "node scripts/sync-deployments.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "private": true
+}
