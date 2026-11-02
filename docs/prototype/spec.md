@@ -227,7 +227,8 @@ Event `TransferExecuted(issueId, supplier, amount, released)`.
 ### Treasury and views
 
 `receive() external payable` — anyone funds the treasury (funding mechanisms are out of scope;
-the demo is funded from a faucet). Optional event `TreasuryFunded(from, amount)` **[GAP]**.
+the demo is funded from a faucet). Emits `TreasuryFunded(from, amount)` so contributions are part
+of the history (decided 2026-11-02; not in Entrega 3's Tabla 25 — see `thesis-sync.md`).
 
 Views (all in Figura 4, decided 2026-10-27):
 
@@ -286,6 +287,7 @@ BallotCast(uint256 indexed issueId, address indexed voter)
 IssueAwarded(uint256 indexed issueId, uint256 indexed bidId)
 IssueClosedWithoutAward(uint256 indexed issueId)
 TransferExecuted(uint256 indexed issueId, address indexed supplier, uint256 amount, uint256 released)
+TreasuryFunded(address indexed from, uint256 amount)          // added 2026-11-02
 ```
 
 The "historial consultable" (prototype limit) is built from these events by the clients.

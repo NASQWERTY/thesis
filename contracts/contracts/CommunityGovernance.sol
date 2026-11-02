@@ -78,6 +78,7 @@ contract CommunityGovernance {
     event WeightChanged(address indexed member, uint32 oldWeight, uint32 newWeight);
     event SupplierRegistered(address indexed supplier);
     event IssueCreated(uint256 indexed issueId, address indexed proposer, uint256 ceiling);
+    event TreasuryFunded(address indexed from, uint256 amount);
 
     // ---------------------------------------------------------------------
     // Parameters (spec §2)
@@ -277,8 +278,10 @@ contract CommunityGovernance {
     // ---------------------------------------------------------------------
 
     /// @notice Anyone can fund the treasury. Funding mechanisms are out of scope; the demo is
-    /// funded from a faucet.
-    receive() external payable {}
+    /// funded from a faucet. The event makes every contribution part of the history.
+    receive() external payable {
+        emit TreasuryFunded(msg.sender, msg.value);
+    }
 
     // ---------------------------------------------------------------------
     // Views

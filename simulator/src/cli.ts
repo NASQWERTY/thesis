@@ -9,6 +9,7 @@ import QRCode from "qrcode";
 import { connect, dataDir, hardhatAccount, type Connection, type NetworkName } from "./chain.ts";
 import { readMembers, readSuppliers, type MemberRow, type SupplierRow } from "./csv.ts";
 import { describeError, UserError } from "./errors.ts";
+import { history } from "./history.ts";
 
 const HELP = `Simulador de empadronamiento (registrador)
 
@@ -21,6 +22,7 @@ Comandos:
   weight <miembro> <peso>     Cambia el peso de voto de un miembro
   remove <miembro>            Da de baja a un miembro
   list                        Muestra el padrón, los proveedores y la tesorería
+  history [--issue <n>]       Historial de eventos del contrato (o de una cuestión)
   fund <eth>                  Envía ETH del registrador a la tesorería del contrato
   keys                        Muestra las claves privadas de las cuentas de demo
   qr [miembro] [--html]       Muestra el QR de la clave de cada miembro, para escanear con la app
@@ -35,6 +37,7 @@ const { values: opts, positionals } = parseArgs({
   options: {
     network: { type: "string", short: "n", default: "local" },
     html: { type: "boolean" },
+    issue: { type: "string" },
     help: { type: "boolean", short: "h" },
   },
 });
@@ -307,6 +310,12 @@ async function accounts(countArg?: string) {
   for (const w of wallets) console.log(`  ${w.address}`);
 }
 
+function issueArg(): bigint | undefined {
+  if (opts.issue === undefined) return undefined;
+  if (!/^[0-9]+$/.test(opts.issue)) throw new UserError("--issue debe ser el número de la cuestión");
+  return BigInt(opts.issue);
+}
+
 // ---------------------------------------------------------------------------
 
 async function main() {
@@ -328,6 +337,7 @@ async function main() {
     weight: (c) => weight(c, args[0], args[1]),
     remove: (c) => remove(c, args[0]),
     list: (c) => list(c),
+    history: async (c) => history(c, await membersByAddress(), await suppliersByAddress(), issueArg()),
     fund: (c) => fund(c, args[0]),
   };
   const run = commands[command];
