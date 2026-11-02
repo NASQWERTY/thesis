@@ -128,7 +128,10 @@ Checkpoint keys are `uint48(block.timestamp)` (OpenZeppelin `Checkpoints.Trace20
 - caller already has a delegate (must revoke first);
 - caller has `receivedWeight > 0` (is a delegate → cannot delegate);
 - `delegate` has a delegate itself (is a delegator → cannot receive);
-- cap: `(members[delegate].receivedWeight + members[msg.sender].weight) * DELEGATION_CAP_DIVISOR > currentTotalWeight`.
+- cap: `(ownEffective(delegate) + members[delegate].receivedWeight + members[msg.sender].weight) * DELEGATION_CAP_DIVISOR > currentTotalWeight`,
+  where `ownEffective` is the delegate's weight if eligible, else 0. **The delegate's own weight counts** (decided
+  2026-11-02): the cap bounds the weight a delegate *controls*, so nobody controls more than 1/3.
+  With 9 members of weight 1, a delegate can receive 2 delegations (controls 3 of 9), not 3.
 
 Effects: set `delegate`, add weight to `receivedWeight`, checkpoint `delegateHistory[msg.sender]`.
 Event `DelegationSet(delegator, delegate)`.

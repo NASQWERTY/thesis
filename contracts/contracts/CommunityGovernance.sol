@@ -79,6 +79,12 @@ contract CommunityGovernance {
     error AlreadyBid(uint256 issueId, address supplier);
     error ZeroAmount();
     error AmountAboveCeiling(uint256 ceiling, uint256 amount);
+    error SelfDelegation();
+    error AlreadyDelegating(address currentDelegate);
+    error DelegatorIsDelegate(address delegator);
+    error DelegateIsDelegating(address delegate);
+    error DelegationCapExceeded(uint256 controlledWeight, uint256 totalWeight);
+    error NotDelegating(address member);
 
     // ---------------------------------------------------------------------
     // Events (spec §6)
@@ -89,6 +95,8 @@ contract CommunityGovernance {
     event EligibilityChanged(address indexed member, bool eligible);
     event WeightChanged(address indexed member, uint32 oldWeight, uint32 newWeight);
     event SupplierRegistered(address indexed supplier);
+    event DelegationSet(address indexed delegator, address indexed delegate);
+    event DelegationRevoked(address indexed delegator);
     event IssueCreated(uint256 indexed issueId, address indexed proposer, uint256 ceiling);
     event BidSubmitted(uint256 indexed issueId, uint256 indexed bidId, address indexed supplier, uint256 amount);
     event TreasuryFunded(address indexed from, uint256 amount);
@@ -135,6 +143,9 @@ contract CommunityGovernance {
 
     /// @dev Sum of all effective weights.
     Checkpoints.Trace208 private totalWeightHistory;
+
+    /// @dev Delegate of each member over time, stored as uint160 (0 = none).
+    mapping(address => Checkpoints.Trace208) private delegateHistory;
 
     /// @notice Sum of the ceilings of Open and Awarded issues: treasury funds already committed.
     uint256 public reservedBalance;
@@ -211,8 +222,14 @@ contract CommunityGovernance {
     }
 
     /// @notice Removes `member` from the registry from now on. Past snapshots still see them.
-    /// TODO(HU-005): revoke the member's outgoing and incoming delegations (OPEN-4).
+    /// Revokes the member's outgoing delegation and every delegation they received (OPEN-4).
     function removeMember(address member) external onlyRegistrar onlyRegistered(member) {
+        if (members[member].delegate != address(0)) _revokeDelegation(member);
+        if (members[member].receivedWeight > 0) {
+            for (uint256 i = 0; i < memberList.length; i++) {
+                if (members[memberList[i]].delegate == member) _revokeDelegation(memberList[i]);
+            }
+        }
         _checkpointWeight(member, 0);
         // Stays in memberList (append-only) and keeps `listed`, so re-registering does not duplicate it.
         delete members[member];
@@ -238,6 +255,12 @@ contract CommunityGovernance {
         m.weight = newWeight;
         // An ineligible member keeps effective weight 0; the new weight applies when re-enabled.
         if (m.eligible) _checkpointWeight(member, newWeight);
+        // The delegate may end above the cap: accepted edge case (ADR-0019), the cap is checked
+        // when delegating.
+        if (m.delegate != address(0)) {
+            Member storage d = members[m.delegate];
+            d.receivedWeight = d.receivedWeight - oldWeight + newWeight;
+        }
 
         emit WeightChanged(member, oldWeight, newWeight);
     }
@@ -258,6 +281,42 @@ contract CommunityGovernance {
         isSupplier[supplier] = true;
 
         emit SupplierRegistered(supplier);
+    }
+
+    // ---------------------------------------------------------------------
+    // Delegation (HU-005, HU-006)
+    // ---------------------------------------------------------------------
+
+    /// @notice Delegates the caller's vote to `delegate` for issues created from now on.
+    /// Single hop: nobody is delegator and delegate at once. Cap: the delegate cannot end up
+    /// controlling more than 1/3 of the total eligible weight (ADR-0019).
+    function delegateTo(address delegate) external {
+        _requireEligible(msg.sender);
+        if (delegate == msg.sender) revert SelfDelegation();
+        Member storage d = members[delegate];
+        if (!d.registered) revert NotRegistered(delegate);
+        Member storage m = members[msg.sender];
+        if (m.delegate != address(0)) revert AlreadyDelegating(m.delegate);
+        if (m.receivedWeight > 0) revert DelegatorIsDelegate(msg.sender);
+        if (d.delegate != address(0)) revert DelegateIsDelegating(delegate);
+
+        // Weight the delegate would control: its own effective weight + received + the caller's.
+        uint256 controlled = uint256(d.eligible ? d.weight : 0) + d.receivedWeight + m.weight;
+        uint256 total = totalWeightHistory.latest();
+        if (controlled * DELEGATION_CAP_DIVISOR > total) revert DelegationCapExceeded(controlled, total);
+
+        m.delegate = delegate;
+        d.receivedWeight += m.weight;
+        delegateHistory[msg.sender].push(Time.timestamp(), uint160(delegate));
+
+        emit DelegationSet(msg.sender, delegate);
+    }
+
+    /// @notice Takes the caller's vote back. Issues already created keep resolving against
+    /// their snapshot; the change applies to issues created afterwards.
+    function revokeDelegation() external {
+        if (members[msg.sender].delegate == address(0)) revert NotDelegating(msg.sender);
+        _revokeDelegation(msg.sender);
     }
 
     // ---------------------------------------------------------------------
@@ -350,6 +409,11 @@ contract CommunityGovernance {
         return totalWeightHistory.upperLookup(time);
     }
 
+    /// @notice Delegate of `member` at `time` (address(0) if none).
+    function delegateAt(address member, uint48 time) external view returns (address) {
+        return address(uint160(delegateHistory[member].upperLookup(time)));
+    }
+
     function memberCount() external view returns (uint256) {
         return memberList.length;
     }
@@ -391,6 +455,16 @@ contract CommunityGovernance {
         uint208 oldEffective = weightHistory[member].latest();
         weightHistory[member].push(now_, newEffective);
         totalWeightHistory.push(now_, totalWeightHistory.latest() - oldEffective + newEffective);
+    }
+
+    /// @dev Clears `delegator`'s delegation; the caller has checked there is one.
+    function _revokeDelegation(address delegator) private {
+        Member storage m = members[delegator];
+        members[m.delegate].receivedWeight -= m.weight;
+        m.delegate = address(0);
+        delegateHistory[delegator].push(Time.timestamp(), 0);
+
+        emit DelegationRevoked(delegator);
     }
 
     /// @dev Members may create issues, vote and delegate only while registered and eligible.
