@@ -11,6 +11,7 @@ shared/deployments/31337.json
 
 # Simulator-generated demo account keys
 simulator/accounts.*.json
+simulator/qr.*.html
 
 # Vite / Expo
 dist/

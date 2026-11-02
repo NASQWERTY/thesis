@@ -5,6 +5,7 @@ import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { formatEther, getAddress, isAddress, parseEther, Wallet } from "ethers";
+import QRCode from "qrcode";
 import { connect, dataDir, hardhatAccount, type Connection, type NetworkName } from "./chain.ts";
 import { readMembers, readSuppliers, type MemberRow, type SupplierRow } from "./csv.ts";
 import { describeError, UserError } from "./errors.ts";
@@ -21,7 +22,9 @@ Comandos:
   remove <miembro>            Da de baja a un miembro
   list                        Muestra el padrón, los proveedores y la tesorería
   fund <eth>                  Envía ETH del registrador a la tesorería del contrato
-  keys                        Muestra las claves privadas de las cuentas de demo (para la app)
+  keys                        Muestra las claves privadas de las cuentas de demo
+  qr [miembro] [--html]       Muestra el QR de la clave de cada miembro, para escanear con la app
+                              (--html genera una página para abrir en el navegador)
   accounts <n>                Genera n cuentas nuevas para la testnet (sepolia)
 
 <miembro> es una dirección o una unidad del CSV de miembros (p. ej. T1-1A).
@@ -31,6 +34,7 @@ const { values: opts, positionals } = parseArgs({
   allowPositionals: true,
   options: {
     network: { type: "string", short: "n", default: "local" },
+    html: { type: "boolean" },
     help: { type: "boolean", short: "h" },
   },
 });
@@ -43,6 +47,7 @@ const shown = (path: string) => relative(process.cwd(), path) || path;
 const membersCsv = (path?: string) => path ?? fileURLToPath(new URL("members.csv", dataDir(network)));
 const suppliersCsv = (path?: string) => path ?? fileURLToPath(new URL("suppliers.csv", dataDir(network)));
 const accountsFile = fileURLToPath(new URL(`../accounts.${network}.json`, import.meta.url));
+const qrHtmlFile = fileURLToPath(new URL(`../qr.${network}.html`, import.meta.url));
 
 /** Members CSV indexed by address, empty if the file does not exist. */
 async function membersByAddress(): Promise<Map<string, MemberRow>> {
@@ -210,24 +215,28 @@ async function fund(c: Connection, amount?: string) {
   console.log(`Tesorería: ${formatEther(await c.provider.getBalance(c.deployment.address))} ETH`);
 }
 
-/** Private keys of the demo accounts, to import them into the member app or a browser wallet. */
-async function keys() {
-  let keyOf: (address: string) => string | undefined;
+/** Private key of each demo account: Hardhat accounts locally, generated accounts on Sepolia. */
+async function demoKeys(): Promise<(address: string) => string | undefined> {
   if (network === "local") {
     const local = new Map(Array.from({ length: 20 }, (_, i) => hardhatAccount(i)).map((w) => [w.address, w.privateKey]));
-    keyOf = (a) => local.get(a);
-  } else {
-    let saved: { address: string; privateKey: string }[];
-    try {
-      saved = JSON.parse(await readFile(accountsFile, "utf8"));
-    } catch {
-      throw new UserError(`No existe ${shown(accountsFile)}. Generá las cuentas con \`accounts <n>\`.`);
-    }
-    const byAddress = new Map(saved.map((a) => [getAddress(a.address), a.privateKey]));
-    keyOf = (a) => byAddress.get(a);
+    return (a) => local.get(a);
   }
+  let saved: { address: string; privateKey: string }[];
+  try {
+    saved = JSON.parse(await readFile(accountsFile, "utf8"));
+  } catch {
+    throw new UserError(`No existe ${shown(accountsFile)}. Generá las cuentas con \`accounts <n>\`.`);
+  }
+  const byAddress = new Map(saved.map((a) => [getAddress(a.address), a.privateKey]));
+  return (a) => byAddress.get(a);
+}
 
-  console.log("Claves de las cuentas de demo. SOLO TESTNET: nunca uses estas claves con fondos reales.\n");
+const KEYS_WARNING = "Claves de las cuentas de demo. SOLO TESTNET: nunca uses estas claves con fondos reales.";
+
+/** Private keys of the demo accounts, to import them into the member app or a browser wallet. */
+async function keys() {
+  const keyOf = await demoKeys();
+  console.log(`${KEYS_WARNING}\n`);
   console.log("Miembros");
   for (const m of (await membersByAddress()).values()) {
     console.log(`  ${m.unit.padEnd(7)}${m.owner.padEnd(19)}${m.address}\n         ${keyOf(m.address) ?? "(clave desconocida)"}`);
@@ -235,6 +244,47 @@ async function keys() {
   console.log("Proveedores");
   for (const s of (await suppliersByAddress()).values()) {
     console.log(`  ${s.name.padEnd(26)}${s.address}\n         ${keyOf(s.address) ?? "(clave desconocida)"}`);
+  }
+}
+
+/**
+ * QR code of each member's private key, scanned by the member app to import the account.
+ * The QR content is the bare key (0x + 64 hex chars). Terminal by default; `--html` writes a page
+ * (not committed) for screens where the terminal QR does not scan well.
+ */
+async function qr(memberArg: string | undefined, html: boolean) {
+  const keyOf = await demoKeys();
+  let selected = [...(await membersByAddress()).values()];
+  if (memberArg) {
+    const address = await resolveMember(memberArg);
+    selected = selected.filter((m) => m.address === address);
+    if (selected.length === 0) throw new UserError(`${memberArg} no está en el CSV de miembros`);
+  }
+
+  const entries = selected.map((m) => ({ ...m, key: keyOf(m.address) })).filter((m) => m.key);
+  if (entries.length === 0) throw new UserError("No hay claves conocidas para esos miembros");
+
+  if (html) {
+    const cards = await Promise.all(
+      entries.map(
+        async (m) => `<figure><img src="${await QRCode.toDataURL(m.key!, { margin: 2, width: 260 })}" alt="">
+  <figcaption><b>${m.unit}</b> ${m.owner}<br><small>${m.address}</small></figcaption></figure>`,
+      ),
+    );
+    const page = `<!doctype html><html lang="es"><meta charset="utf-8"><title>Claves QR (${network})</title>
+<style>body{font-family:system-ui,sans-serif;margin:24px;background:#fff;color:#111}
+main{display:flex;flex-wrap:wrap;gap:24px}figure{margin:0;text-align:center;border:1px solid #ddd;border-radius:8px;padding:12px}
+small{color:#666;font-size:11px}p{color:#b00}</style>
+<h1>Claves de miembros — ${network}</h1><p>${KEYS_WARNING}</p><main>${cards.join("\n")}</main></html>\n`;
+    await writeFile(qrHtmlFile, page);
+    console.log(`Página con ${entries.length} QR en ${shown(qrHtmlFile)} (no se versiona). Abrila en el navegador.`);
+    return;
+  }
+
+  console.log(`${KEYS_WARNING}\n`);
+  for (const m of entries) {
+    console.log(`${m.unit} ${m.owner} (${short(m.address)})`);
+    console.log(await QRCode.toString(m.key!, { type: "terminal", small: true }));
   }
 }
 
@@ -269,6 +319,7 @@ async function main() {
   // Commands that do not need the chain.
   if (command === "accounts") return accounts(args[0]);
   if (command === "keys") return keys();
+  if (command === "qr") return qr(args[0], opts.html ?? false);
 
   const commands: Record<string, (c: Connection) => Promise<void>> = {
     members: (c) => members(c, args[0]),
