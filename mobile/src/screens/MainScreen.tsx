@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BackHandler, Pressable, Text, View } from "react-native";
+import type { NetworkId } from "../config";
 import { useChain } from "../useChain";
 import { colors, styles } from "../ui";
 import { CastBallotScreen } from "./CastBallotScreen";
@@ -21,8 +22,16 @@ type TabId = (typeof TABS)[number]["id"];
 type Route = { name: "createIssue" } | { name: "issue"; id: bigint } | { name: "vote"; id: bigint };
 
 /** Signed-in shell: bottom tabs over a shared chain connection. */
-export function MainScreen({ privateKey, onLogout }: { privateKey: string; onLogout: () => void }) {
-  const chain = useChain(privateKey);
+export function MainScreen({
+  privateKey,
+  initialNetwork,
+  onLogout,
+}: {
+  privateKey: string;
+  initialNetwork: NetworkId;
+  onLogout: () => void;
+}) {
+  const chain = useChain(privateKey, initialNetwork);
   const [tab, setTab] = useState<TabId>("issues");
   const [route, setRoute] = useState<Route | null>(null);
 
