@@ -18,7 +18,17 @@ export enum Status {
   ClosedWithoutAward,
 }
 
-export interface IssueSummary {
+/** Ballot entry that rejects every bid (CommunityGovernance.REJECT_ALL). */
+export const REJECT_ALL = 0n;
+
+export interface BidInfo {
+  id: bigint;
+  supplier: string;
+  amount: bigint;
+  documentCid: string;
+}
+
+export interface IssueInfo {
   id: bigint;
   proposer: string;
   descriptionCid: string;
@@ -26,9 +36,15 @@ export interface IssueSummary {
   ceiling: bigint;
   phase: Phase;
   status: Status;
+  winningBidId: bigint;
+  /** Chain timestamps. */
+  biddingEnd: number;
+  votingEnd: number;
   /** Chain timestamp at which the current phase ends; null once voting has ended. */
   phaseEnd: number | null;
-  bidCount: number;
+  bids: BidInfo[];
+  /** The member's ballot: bid ids and REJECT_ALL, most preferred first; empty if not voted. */
+  ranking: bigint[];
   voted: boolean;
 }
 
@@ -71,36 +87,53 @@ export function phaseLabel(phase: Phase, status: Status): { text: string; color:
   }
 }
 
-/** Every issue, newest first. Ids are consecutive from 1. */
-export async function loadIssues({ gov, wallet }: Connection, deployment: Deployment): Promise<IssueSummary[]> {
+/** One issue with its bids and the member's ballot. */
+export async function loadIssue({ gov, wallet }: Connection, deployment: Deployment, id: bigint): Promise<IssueInfo> {
   const { biddingPeriod, votingPeriod } = deployment.params;
-  const nextIssueId: bigint = await gov.nextIssueId();
-  const ids = Array.from({ length: Number(nextIssueId) - 1 }, (_, i) => nextIssueId - 1n - BigInt(i));
+  const [issue, phase, [bidIds, bidList], ballot] = await Promise.all([
+    gov.issues(id),
+    gov.phaseOf(id),
+    gov.getBids(id),
+    gov.getBallot(id, wallet.address),
+  ]);
+  const biddingEnd = Number(issue.createdAt) + biddingPeriod;
+  const votingEnd = biddingEnd + votingPeriod;
+  const p = Number(phase) as Phase;
+  return {
+    id,
+    proposer: issue.proposer,
+    descriptionCid: issue.descriptionCid,
+    topic: topicLabel(issue.topic),
+    ceiling: issue.ceiling,
+    phase: p,
+    status: Number(issue.status) as Status,
+    winningBidId: issue.winningBidId,
+    biddingEnd,
+    votingEnd,
+    phaseEnd: p === Phase.Bidding ? biddingEnd : p === Phase.Voting ? votingEnd : null,
+    bids: (bidIds as bigint[]).map((bidId, i) => ({
+      id: bidId,
+      supplier: bidList[i].supplier,
+      amount: bidList[i].amount,
+      documentCid: bidList[i].documentCid,
+    })),
+    ranking: [...ballot.ranking],
+    voted: ballot.cast,
+  };
+}
 
-  return Promise.all(
-    ids.map(async (id) => {
-      const [issue, phase, [bidIds], ballot] = await Promise.all([
-        gov.issues(id),
-        gov.phaseOf(id),
-        gov.getBids(id),
-        gov.getBallot(id, wallet.address),
-      ]);
-      const biddingEnd = Number(issue.createdAt) + biddingPeriod;
-      const p = Number(phase) as Phase;
-      return {
-        id,
-        proposer: issue.proposer,
-        descriptionCid: issue.descriptionCid,
-        topic: topicLabel(issue.topic),
-        ceiling: issue.ceiling,
-        phase: p,
-        status: Number(issue.status) as Status,
-        phaseEnd: p === Phase.Bidding ? biddingEnd : p === Phase.Voting ? biddingEnd + votingPeriod : null,
-        bidCount: bidIds.length,
-        voted: ballot.cast,
-      };
-    }),
-  );
+/** Every issue, newest first. Ids are consecutive from 1. */
+export async function loadIssues(connection: Connection, deployment: Deployment): Promise<IssueInfo[]> {
+  const nextIssueId: bigint = await connection.gov.nextIssueId();
+  const ids = Array.from({ length: Number(nextIssueId) - 1 }, (_, i) => nextIssueId - 1n - BigInt(i));
+  return Promise.all(ids.map((id) => loadIssue(connection, deployment, id)));
+}
+
+/** Chain timestamp → "dd/mm hh:mm" (device time zone). */
+export function formatTime(timestamp: number): string {
+  const d = new Date(timestamp * 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function remaining(seconds: number): string {

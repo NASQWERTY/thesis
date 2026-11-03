@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View, type ViewStyle } from "react-native";
 
 export const colors = {
   bg: "#F4F6F8",
@@ -13,9 +13,9 @@ export const colors = {
   border: "#D8DEE4",
 };
 
-export function Card({ title, children }: { title: string; children: ReactNode }) {
+export function Card({ title, children, style }: { title: string; children: ReactNode; style?: ViewStyle }) {
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, style]}>
       <Text style={styles.cardTitle}>{title}</Text>
       {children}
     </View>
@@ -37,22 +37,25 @@ export function Button({
   title,
   onPress,
   busy,
+  disabled,
   kind = "primary",
 }: {
   title: string;
   onPress: () => void;
   busy?: boolean;
+  disabled?: boolean;
   kind?: "primary" | "secondary";
 }) {
   const primary = kind === "primary";
   return (
     <Pressable
       onPress={onPress}
-      disabled={busy}
+      disabled={busy || disabled}
       style={({ pressed }) => [
         styles.button,
         primary ? styles.buttonPrimary : styles.buttonSecondary,
         (pressed || busy) && { opacity: 0.6 },
+        disabled && { opacity: 0.35 },
       ]}
     >
       {busy ? (
@@ -108,6 +111,7 @@ export const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: "hidden",
   },
+  bid: { gap: 6, paddingTop: 8, borderTopWidth: 1, borderTopColor: colors.border },
   issueTitle: { fontSize: 17, fontWeight: "700", color: colors.text },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, borderColor: colors.border },

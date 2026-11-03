@@ -4,6 +4,7 @@ import { useChain } from "../useChain";
 import { colors, styles } from "../ui";
 import { CreateIssueScreen } from "./CreateIssueScreen";
 import { HomeScreen } from "./HomeScreen";
+import { IssueDetailScreen } from "./IssueDetailScreen";
 import { IssuesScreen } from "./IssuesScreen";
 
 const TABS = [
@@ -14,7 +15,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 /** Screens opened on top of the tabs; "← Volver" or Android's back button closes them. */
-type Route = { name: "createIssue" };
+type Route = { name: "createIssue" } | { name: "issue"; id: bigint };
 
 /** Signed-in shell: bottom tabs over a shared chain connection. */
 export function MainScreen({ privateKey, onLogout }: { privateKey: string; onLogout: () => void }) {
@@ -34,11 +35,20 @@ export function MainScreen({ privateKey, onLogout }: { privateKey: string; onLog
   if (route?.name === "createIssue") {
     return <CreateIssueScreen chain={chain} onDone={() => setRoute(null)} />;
   }
+  if (route?.name === "issue") {
+    return <IssueDetailScreen chain={chain} issueId={route.id} onBack={() => setRoute(null)} />;
+  }
 
   return (
     <View style={styles.screen}>
       <View style={{ flex: 1 }}>
-        {tab === "issues" && <IssuesScreen chain={chain} onCreate={() => setRoute({ name: "createIssue" })} />}
+        {tab === "issues" && (
+          <IssuesScreen
+            chain={chain}
+            onCreate={() => setRoute({ name: "createIssue" })}
+            onOpen={(id) => setRoute({ name: "issue", id })}
+          />
+        )}
         {tab === "account" && <HomeScreen chain={chain} onLogout={onLogout} />}
       </View>
       <View style={styles.tabBar}>
