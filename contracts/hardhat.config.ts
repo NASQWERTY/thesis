@@ -16,6 +16,11 @@ export default defineConfig({
     // Arbitrum enforces too. Low runs: deployment size matters more than call gas here.
     settings: { optimizer: { enabled: true, runs: 200 } },
   },
+  // Source verification on Arbiscan through the Etherscan v2 API (one key for every chain).
+  // Resolved lazily: only `npm run verify:sepolia` needs ETHERSCAN_API_KEY.
+  verify: {
+    etherscan: { apiKey: configVariable("ETHERSCAN_API_KEY") },
+  },
   networks: {
     // Tests use the built-in simulated network ("default"), which only mines on transactions:
     // that keeps their clock deterministic. `localhost` (built in) points to `npm run node`.

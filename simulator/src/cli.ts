@@ -24,6 +24,8 @@ Comandos:
   list                        Muestra el padrón, los proveedores y la tesorería
   history [--issue <n>]       Historial de eventos del contrato (o de una cuestión)
   fund <eth>                  Envía ETH del registrador a la tesorería del contrato
+  gas <eth>                   Completa hasta <eth> el saldo de cada miembro y proveedor de los
+                              CSV, para que puedan pagar el gas (desde el registrador)
   close <n>                   Cierra la cuestión n y muestra el resultado (cualquier cuenta
                               puede cerrar; firma el registrador)
   execute <n>                 Paga al proveedor adjudicado en la cuestión n (también
@@ -408,6 +410,36 @@ async function close(c: Connection, arg?: string) {
   }
 }
 
+/**
+ * Tops up every member and supplier of the CSVs to `amount` ETH for gas, from the registrar.
+ * On the testnet each faucet asks for a login per address; funding the demo accounts from the
+ * registrar is the practical way. Accounts already at or above `amount` are skipped.
+ */
+async function gas(c: Connection, amount?: string) {
+  let target: bigint;
+  try {
+    target = parseEther(amount ?? "");
+  } catch {
+    throw new UserError("Indicá el saldo objetivo en ETH, p. ej. gas 0.002");
+  }
+  const accounts = [
+    ...(await readMembers(membersCsv())).map((m) => ({ address: m.address, label: `${m.unit} ${m.owner}` })),
+    ...(await readSuppliers(suppliersCsv())).map((s) => ({ address: s.address, label: s.name })),
+  ];
+  console.log(`Saldo para gas: ${amount} ETH a ${accounts.length} cuentas`);
+  for (const a of accounts) {
+    const balance = await c.provider.getBalance(a.address);
+    const desc = `${a.label.padEnd(26)} ${short(a.address)}`;
+    if (balance >= target) {
+      console.log(`  · ${desc}: ya tiene ${formatEther(balance)} ETH`);
+      continue;
+    }
+    const value = target - balance;
+    await send(c, `${desc}: +${formatEther(value)} ETH`, () => c.registrar.sendTransaction({ to: a.address, value }));
+  }
+  console.log(`Saldo del registrador: ${formatEther(await c.provider.getBalance(c.registrar.address))} ETH`);
+}
+
 /** Pays the awarded supplier (HU-009). Permissionless too: the registrar account pays the gas. */
 async function execute(c: Connection, arg?: string) {
   const issueId = issueNumber(arg, "execute 1");
@@ -458,6 +490,7 @@ async function main() {
     time: (c) => advanceTime(c, args[0]),
     close: (c) => close(c, args[0]),
     execute: (c) => execute(c, args[0]),
+    gas: (c) => gas(c, args[0]),
     history: async (c) => history(c, await membersByAddress(), await suppliersByAddress(), issueArg()),
     fund: (c) => fund(c, args[0]),
   };

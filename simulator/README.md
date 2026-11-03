@@ -29,6 +29,7 @@ npm run sim -- <command> [args] [--network local|sepolia]    # default: local
 | `remove <member>` | Removes a member |
 | `list` | Registry, suppliers, treasury balance and contract parameters |
 | `fund <eth>` | Sends ETH from the registrar to the treasury |
+| `gas <eth>` | Tops up every member and supplier of the CSVs to `<eth>` for gas, from the registrar (skips those already there). Needed on the testnet: faucets ask for a login per address |
 | `history [--issue <n>]` | Consultable history: every contract event since the deployment (or only one issue's), decoded, with block, date and transaction |
 | `close <n>` | Closes issue `n` and prints the outcome: awarded bid, or why it closed without award. `closeIssue` is permissionless; the registrar account only pays the gas |
 | `execute <n>` | Pays the awarded supplier of issue `n` and prints the amount paid and released (`executeTransfer`, permissionless too) |

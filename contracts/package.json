@@ -6,7 +6,8 @@
     "build": "hardhat build",
     "node": "hardhat node --network demoNode --hostname 0.0.0.0",
     "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
-    "deploy:sepolia": "hardhat run scripts/deploy.ts --network arbitrumSepolia"
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network arbitrumSepolia",
+    "verify:sepolia": "hardhat run scripts/verify.ts --network arbitrumSepolia"
   },
   "type": "module",
   "private": true,

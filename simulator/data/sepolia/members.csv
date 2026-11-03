@@ -1,0 +1,12 @@
+# Padrón de demo para Arbitrum Sepolia (titulares ficticios, los mismos que en la red local).
+# Direcciones: cuentas descartables generadas con `npm run sim -- accounts 11 --network sepolia`
+# (claves en accounts.sepolia.json, que no se versiona). Sin valor económico.
+unidad,titular,direccion,peso
+T1-1A,Ana Gómez,0xFAA76BC799BEB6c68699641FEEf7D38654D719D4,1
+T1-2B,Bruno Díaz,0xBd9dc9449E6e820FD104948c9dE598784e6C28F6,1
+T1-3C,Carla Ruiz,0xc53373f912cfaACcefD34aF637049A11ea8834d7,1
+T2-1A,Diego Fernández,0x6C76D175737734A626005a1B5CBfF3F97b186b10,1
+T2-2B,Elena Sosa,0xd2F9f861e265d7E2a1bBDC311C4c6d5412db9C1E,1
+T2-3C,Facundo López,0xA74006EF07299a20b5Ff05dC71b8ABBAA17CfB3a,1
+T3-1A,Gabriela Torres,0xCb808b556d078c6d7141B551166342846cd1c0F3,1
+T3-2B,Hernán Molina,0x1F07Fe6a86DFaBDBA0eafEE958039F1D7A3e0394,1
