@@ -30,7 +30,8 @@ Comandos:
                               puede cerrar; firma el registrador)
   execute <n>                 Paga al proveedor adjudicado en la cuestión n (también
                               sin permisos; firma el registrador)
-  keys                        Muestra las claves privadas de las cuentas de demo
+  keys [--file]               Muestra las claves privadas de las cuentas de demo
+                              (--file genera cuentas-demo.<red>.txt para entregar)
   qr [miembro] [--html]       Muestra el QR de la clave de cada miembro, para escanear con la app
                               (--html genera una página para abrir en el navegador)
   accounts <n>                Genera n cuentas nuevas para la testnet (sepolia)
@@ -49,6 +50,7 @@ const { values: opts, positionals } = parseArgs({
   options: {
     network: { type: "string", short: "n", default: "local" },
     html: { type: "boolean" },
+    file: { type: "boolean" },
     issue: { type: "string" },
     topic: { type: "string", default: "general" },
     help: { type: "boolean", short: "h" },
@@ -64,6 +66,7 @@ const membersCsv = (path?: string) => path ?? fileURLToPath(new URL("members.csv
 const suppliersCsv = (path?: string) => path ?? fileURLToPath(new URL("suppliers.csv", dataDir(network)));
 const accountsFile = fileURLToPath(new URL(`../accounts.${network}.json`, import.meta.url));
 const qrHtmlFile = fileURLToPath(new URL(`../qr.${network}.html`, import.meta.url));
+const keysFile = fileURLToPath(new URL(`../cuentas-demo.${network}.txt`, import.meta.url));
 
 /** Members CSV indexed by address, empty if the file does not exist. */
 async function membersByAddress(): Promise<Map<string, MemberRow>> {
@@ -249,9 +252,14 @@ async function demoKeys(): Promise<(address: string) => string | undefined> {
 
 const KEYS_WARNING = "Claves de las cuentas de demo. SOLO TESTNET: nunca uses estas claves con fondos reales.";
 
-/** Private keys of the demo accounts, to import them into the member app or a browser wallet. */
-async function keys() {
+/**
+ * Private keys of the demo accounts, to import them into the member app or a browser wallet.
+ * `--file` writes them, with the contract and how to use them, to a text file meant to be handed
+ * over with the delivery (not versioned).
+ */
+async function keys(toFile: boolean) {
   const keyOf = await demoKeys();
+  if (toFile) return writeKeysFile(keyOf);
   console.log(`${KEYS_WARNING}\n`);
   console.log("Miembros");
   for (const m of (await membersByAddress()).values()) {
@@ -261,6 +269,49 @@ async function keys() {
   for (const s of (await suppliersByAddress()).values()) {
     console.log(`  ${s.name.padEnd(26)}${s.address}\n         ${keyOf(s.address) ?? "(clave desconocida)"}`);
   }
+}
+
+const CHAIN_IDS: Record<NetworkName, number> = { local: 31337, sepolia: 421614 };
+const EXPLORERS: Partial<Record<NetworkName, string>> = { sepolia: "https://sepolia.arbiscan.io" };
+
+async function writeKeysFile(keyOf: (address: string) => string | undefined) {
+  let contract = "(sin desplegar)";
+  try {
+    const file = new URL(`../../shared/deployments/${CHAIN_IDS[network]}.json`, import.meta.url);
+    contract = JSON.parse(await readFile(file, "utf8")).address;
+  } catch {
+    // No deployment yet: the file still lists the accounts.
+  }
+  const explorer = EXPLORERS[network];
+  const key = (address: string) => keyOf(address) ?? "(clave desconocida)";
+
+  const lines = [
+    `CUENTAS DE DEMO — ${network === "sepolia" ? "Arbitrum Sepolia (testnet, chainId 421614)" : "red local de Hardhat"}`,
+    "",
+    "SOLO TESTNET. Estas claves no tienen ni deben tener valor económico: nunca las uses en una red",
+    "real ni les envíes fondos reales.",
+    "",
+    `Contrato: ${contract}`,
+    ...(explorer && contract.startsWith("0x") ? [`Explorador: ${explorer}/address/${contract}`] : []),
+    "",
+    "Cómo usarlas:",
+    "- Miembros: en la app móvil, pegar la clave en «O pegá la clave privada» y tocar «Importar»",
+    "  (o «Escanear QR» con el código de `npm run sim -- qr`).",
+    "- Proveedores: en MetaMask, «Importar cuenta» con la clave privada; después, en el portal de",
+    "  proveedores, «Conectar MetaMask».",
+    "",
+    "MIEMBROS (unidad, titular)",
+    "",
+  ];
+  for (const m of (await membersByAddress()).values()) {
+    lines.push(`${m.unit}  ${m.owner}`, `  Dirección:     ${m.address}`, `  Clave privada: ${key(m.address)}`, "");
+  }
+  lines.push("PROVEEDORES", "");
+  for (const s of (await suppliersByAddress()).values()) {
+    lines.push(s.name, `  Dirección:     ${s.address}`, `  Clave privada: ${key(s.address)}`, "");
+  }
+  await writeFile(keysFile, lines.join("\n"));
+  console.log(`Cuentas de demo en ${shown(keysFile)} (no se versiona). Entregalo aparte del código.`);
 }
 
 /**
@@ -476,7 +527,7 @@ async function main() {
 
   // Commands that do not need the chain.
   if (command === "accounts") return accounts(args[0]);
-  if (command === "keys") return keys();
+  if (command === "keys") return keys(opts.file ?? false);
   if (command === "qr") return qr(args[0], opts.html ?? false);
 
   const commands: Record<string, (c: Connection) => Promise<void>> = {
