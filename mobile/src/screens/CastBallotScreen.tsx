@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, Text, View } from "react-native";
 import { formatEther, ZeroAddress } from "ethers";
 import { describeError, short, type Connection } from "../chain";
+import { displayName } from "../directory";
 import type { Deployment } from "../config";
 import { useGateway } from "../ipfs";
 import { loadIssue, Phase, REJECT_ALL, remaining, type BidInfo, type IssueInfo } from "../issues";
@@ -56,6 +57,7 @@ export function CastBallotScreen({ chain, issueId, onDone }: { chain: Chain; iss
     [issueId],
   );
   const { data: ctx, error: loadError, now } = useChainData(chain, load);
+  const chainId = chain.network.chainId;
   // Options in the order the member taps them, most preferred first.
   const [picked, setPicked] = useState<bigint[]>([]);
   const [step, setStep] = useState<string | null>(null);
@@ -130,8 +132,8 @@ export function CastBallotScreen({ chain, issueId, onDone }: { chain: Chain; iss
           )}
           {ctx.delegate !== ZeroAddress && (
             <Text style={[styles.p, { color: colors.warn }]}>
-              Cuando se creó esta cuestión tenías tu voto delegado en {short(ctx.delegate)}. Si votás, tu boleta
-              reemplaza a la de tu delegado para vos en esta cuestión.
+              Cuando se creó esta cuestión tenías tu voto delegado en {displayName(chainId, ctx.delegate)}. Si
+              votás, tu boleta reemplaza a la de tu delegado para vos en esta cuestión.
             </Text>
           )}
           {ctx.delegators > 0 && (
@@ -172,7 +174,14 @@ export function CastBallotScreen({ chain, issueId, onDone }: { chain: Chain; iss
           {!complete && (
             <Card title={ranking.length === 0 ? "Opciones" : "Elegí la siguiente"}>
               {left.map((id) => (
-                <Option key={String(id)} id={id} bids={issue.bids} gateway={gateway} onPress={() => toggle(id)} />
+                <Option
+                  key={String(id)}
+                  chainId={chainId}
+                  id={id}
+                  bids={issue.bids}
+                  gateway={gateway}
+                  onPress={() => toggle(id)}
+                />
               ))}
             </Card>
           )}
@@ -187,11 +196,13 @@ export function CastBallotScreen({ chain, issueId, onDone }: { chain: Chain; iss
 }
 
 function Option({
+  chainId,
   id,
   bids,
   gateway,
   onPress,
 }: {
+  chainId: number;
   id: bigint;
   bids: BidInfo[];
   gateway: string | null;
@@ -203,7 +214,7 @@ function Option({
       <Text style={styles.issueTitle}>{optionLabel(id, bids)}</Text>
       {bid ? (
         <View style={styles.row}>
-          <Text style={styles.label}>Proveedor {short(bid.supplier)}</Text>
+          <Text style={styles.label}>{displayName(chainId, bid.supplier)}</Text>
           {gateway && (
             <Text
               style={{ color: colors.primary, fontWeight: "600" }}

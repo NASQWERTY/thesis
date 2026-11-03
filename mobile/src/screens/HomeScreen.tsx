@@ -4,6 +4,7 @@ import { formatEther, parseEther, ZeroAddress } from "ethers";
 import { NETWORKS } from "../config";
 import { clearKey } from "../keyStore";
 import { describeError, short } from "../chain";
+import { displayName } from "../directory";
 import type { Chain } from "../useChain";
 import { Button, Card, colors, Row, styles } from "../ui";
 
@@ -160,7 +161,7 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
 
       {data && (
         <Card title="Padrón">
-          <MemberStatus data={data} />
+          <MemberStatus data={data} chainId={network.chainId} />
         </Card>
       )}
 
@@ -179,7 +180,7 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
   );
 }
 
-function MemberStatus({ data }: { data: Snapshot }) {
+function MemberStatus({ data, chainId }: { data: Snapshot; chainId: number }) {
   if (data.isSupplier) return <Row label="Rol" value="Proveedor" />;
   if (!data.registered) return <Row label="Estado" value="No estás en el padrón" color={colors.warn} />;
   return (
@@ -190,7 +191,7 @@ function MemberStatus({ data }: { data: Snapshot }) {
         color={data.eligible ? colors.ok : colors.error}
       />
       <Row label="Peso de voto" value={String(data.weight)} />
-      <Row label="Delegaste en" value={data.delegate === ZeroAddress ? "—" : short(data.delegate)} />
+      <Row label="Delegaste en" value={data.delegate === ZeroAddress ? "—" : displayName(chainId, data.delegate)} />
       <Row label="Peso recibido" value={String(data.receivedWeight)} />
     </>
   );

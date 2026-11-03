@@ -1,7 +1,8 @@
 import { useCallback } from "react";
 import { Linking, RefreshControl, ScrollView, Text, View } from "react-native";
 import { formatEther } from "ethers";
-import { short, type Connection } from "../chain";
+import { type Connection } from "../chain";
+import { displayName } from "../directory";
 import type { Deployment } from "../config";
 import { useGateway } from "../ipfs";
 import { Description, PhaseAndTopic } from "../issueViews";
@@ -28,6 +29,7 @@ export function IssueDetailScreen({
   );
   const { data: issue, error, loading, refresh, now } = useChainData(chain, load);
   const me = chain.connection?.wallet.address;
+  const chainId = chain.network.chainId;
 
   return (
     <ScrollView
@@ -54,7 +56,7 @@ export function IssueDetailScreen({
               />
             )}
             <Row label="Techo" value={`${formatEther(issue.ceiling)} ETH`} />
-            <Row label="Propuesta por" value={issue.proposer === me ? "vos" : short(issue.proposer)} />
+            <Row label="Propuesta por" value={issue.proposer === me ? "vos" : displayName(chainId, issue.proposer)} />
             <Row label="Fin de ofertas" value={formatTime(issue.biddingEnd)} />
             <Row label="Fin de votación" value={formatTime(issue.votingEnd)} />
           </Card>
@@ -66,7 +68,7 @@ export function IssueDetailScreen({
               </Text>
             )}
             {issue.bids.map((bid) => (
-              <BidItem key={String(bid.id)} bid={bid} issue={issue} gateway={gateway} />
+              <BidItem key={String(bid.id)} chainId={chainId} bid={bid} issue={issue} gateway={gateway} />
             ))}
           </Card>
 
@@ -79,7 +81,17 @@ export function IssueDetailScreen({
   );
 }
 
-function BidItem({ bid, issue, gateway }: { bid: BidInfo; issue: IssueInfo; gateway: string | null }) {
+function BidItem({
+  chainId,
+  bid,
+  issue,
+  gateway,
+}: {
+  chainId: number;
+  bid: BidInfo;
+  issue: IssueInfo;
+  gateway: string | null;
+}) {
   const awarded =
     (issue.status === Status.Awarded || issue.status === Status.Executed) && bid.id === issue.winningBidId;
   return (
@@ -89,7 +101,7 @@ function BidItem({ bid, issue, gateway }: { bid: BidInfo; issue: IssueInfo; gate
         {awarded && <Text style={[styles.value, { color: colors.ok }]}>Adjudicada</Text>}
       </View>
       <Row label="Monto" value={`${formatEther(bid.amount)} ETH`} />
-      <Row label="Proveedor" value={short(bid.supplier)} />
+      <Row label="Proveedor" value={displayName(chainId, bid.supplier)} />
       {gateway ? (
         <Button
           title="Ver propuesta"

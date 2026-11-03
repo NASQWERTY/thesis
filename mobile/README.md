@@ -7,13 +7,18 @@ Current state: import a testnet key (QR scan or paste); **Cuestiones** tab with 
 member already voted), an **issue detail** (full description, deadlines, bids with a link to
 each proposal on IPFS, the member's ballot), **Votar** (the member taps every bid and
 «Rechazar todas» in order of preference; eligibility and delegation are read at the issue's
-snapshot, as the close resolves them) and **Plantear cuestión** (title + description uploaded to IPFS as a
+snapshot, as the close resolves them) and **Plantear cuestión**; **Delegación** tab (delegate
+to a member — those the contract would reject are shown disabled with the reason — or revoke) (title + description uploaded to IPFS as a
 text file, topic from a fixed list, ceiling checked against the treasury's free balance);
 **Mi cuenta** tab with the member's status and the treasury, and a test
 contribution to the treasury.
 
 Issue descriptions are read through the Pinata gateway that the upload service (`uploader/`,
 port 8787 on the same PC) reports; without it the list still works, without descriptions.
+Names of members (unit · owner) and suppliers come from the simulator's CSVs
+(`simulator/data/<network>/`), copied into the app by `npm start` — off-chain, as decided in
+OPEN-5; addresses not in the CSVs are shown shortened. After editing a CSV, restart `npm start`.
+
 Raising an issue requires the uploader (the description must be on IPFS, HU-003).
 
 Wallet strategy (OPEN-7, decided 2026-10-27): the app holds an imported testnet key in the
@@ -55,5 +60,5 @@ press `a`. From the emulator the PC is `10.0.2.2`.
 
 | Script | What it does |
 |---|---|
-| `npm start` | Syncs deployments, starts the Expo dev server |
+| `npm start` | Syncs deployments and member/supplier names, starts the Expo dev server |
 | `npm run typecheck` | TypeScript check |

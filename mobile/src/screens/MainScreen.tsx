@@ -4,12 +4,14 @@ import { useChain } from "../useChain";
 import { colors, styles } from "../ui";
 import { CastBallotScreen } from "./CastBallotScreen";
 import { CreateIssueScreen } from "./CreateIssueScreen";
+import { DelegationScreen } from "./DelegationScreen";
 import { HomeScreen } from "./HomeScreen";
 import { IssueDetailScreen } from "./IssueDetailScreen";
 import { IssuesScreen } from "./IssuesScreen";
 
 const TABS = [
   { id: "issues", label: "Cuestiones" },
+  { id: "delegation", label: "Delegación" },
   { id: "account", label: "Mi cuenta" },
 ] as const;
 
@@ -63,6 +65,7 @@ export function MainScreen({ privateKey, onLogout }: { privateKey: string; onLog
             onOpen={(id) => setRoute({ name: "issue", id })}
           />
         )}
+        {tab === "delegation" && <DelegationScreen chain={chain} />}
         {tab === "account" && <HomeScreen chain={chain} onLogout={onLogout} />}
       </View>
       <View style={styles.tabBar}>

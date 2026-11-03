@@ -25,6 +25,12 @@ const CONTRACT_ERRORS: Record<string, string> = {
   AlreadyVoted: "Ya votaste en esta cuestión. La boleta no se puede cambiar.",
   InvalidRanking: "La boleta tiene que ordenar todas las ofertas y «Rechazar todas», sin repetir.",
   IssueNotFound: "La cuestión no existe.",
+  SelfDelegation: "No podés delegarte el voto a vos mismo.",
+  AlreadyDelegating: "Ya delegaste tu voto. Revocá la delegación antes de elegir otro delegado.",
+  DelegatorIsDelegate: "Te delegaron el voto: no podés delegar mientras seas delegado.",
+  DelegateIsDelegating: "Ese miembro delegó su voto: no puede recibir delegaciones.",
+  DelegationCapExceeded: "Superaría el tope: nadie puede controlar más de un tercio del peso total.",
+  NotDelegating: "No tenés una delegación para revocar.",
 };
 
 /** ethers leaves reverts raised during gas estimation undecoded; decode them with the ABI. */
