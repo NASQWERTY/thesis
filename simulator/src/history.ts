@@ -16,6 +16,9 @@ interface Names {
 const eth = (wei: bigint) => `${formatEther(wei)} ETH`;
 
 /** [title, detail] for each event of spec §6, in Spanish. */
+// CommunityGovernance.CloseReason (index 0, None, never appears in the event).
+const CLOSE_REASONS = ["", "sin ofertas", "sin quórum", "sin ganador único (empate)", "ganó «rechazar todas»"];
+
 const FORMAT: Record<string, (a: Args, n: Names) => [string, string]> = {
   MemberRegistered: (a, n) => ["Alta de miembro", `${n.member(a.member)} · peso ${a.weight}`],
   MemberRemoved: (a, n) => ["Baja de miembro", n.member(a.member)],
@@ -29,7 +32,10 @@ const FORMAT: Record<string, (a: Args, n: Names) => [string, string]> = {
   DelegationRevoked: (a, n) => ["Delegación revocada", n.member(a.delegator)],
   BallotCast: (a, n) => [`Voto en la cuestión #${a.issueId}`, n.member(a.voter)],
   IssueAwarded: (a) => [`Cuestión #${a.issueId} adjudicada`, `oferta #${a.bidId}`],
-  IssueClosedWithoutAward: (a) => [`Cuestión #${a.issueId} cerrada sin adjudicar`, "se libera la reserva"],
+  IssueClosedWithoutAward: (a) => [
+    `Cuestión #${a.issueId} cerrada sin adjudicar`,
+    `${CLOSE_REASONS[Number(a.reason)] ?? "motivo desconocido"} · se libera la reserva`,
+  ],
   TransferExecuted: (a, n) => [
     `Pago de la cuestión #${a.issueId}`,
     `${eth(a.amount)} a ${n.supplier(a.supplier)} · se liberan ${eth(a.released)}`,

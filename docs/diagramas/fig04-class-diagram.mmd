@@ -55,7 +55,7 @@ class GovernanceEvents {
   BidSubmitted(issueId, bidId, supplier, amount)
   BallotCast(issueId, voter)
   IssueAwarded(issueId, bidId)
-  IssueClosedWithoutAward(issueId)
+  IssueClosedWithoutAward(issueId, reason)
   TransferExecuted(issueId, supplier, amount, released)
   TreasuryFunded(from, amount)
 }
@@ -93,6 +93,7 @@ class Issue {
   +snapshot : uint48
   +status : IssueStatus
   +winningBidId : uint256
+  +closeReason : CloseReason
 }
 
 class IssueStatus {
@@ -101,6 +102,21 @@ class IssueStatus {
   Awarded
   Executed
   ClosedWithoutAward
+}
+
+class SchulzeTally {
+  <<library>>
+  +tally(rankings : uint256[][], weights : uint256[], n : uint256) (bool, uint256)
+  +pairwise(rankings : uint256[][], weights : uint256[], n : uint256) uint256[][]
+}
+
+class CloseReason {
+  <<enumeration>>
+  None
+  NoBids
+  NoQuorum
+  NoUniqueWinner
+  RejectAllWon
 }
 
 class IssuePhase {
@@ -132,8 +148,10 @@ CommunityGovernance "1" *-- "0..*" Issue : issues [uint256]
 CommunityGovernance "1" *-- "0..*" Ballot : ballots [uint256, address]
 CommunityGovernance "1" *-- "0..*" Bid : bids [uint256]
 CommunityGovernance ..> IssuePhase : phaseOf
+CommunityGovernance ..> SchulzeTally : «use» closeIssue
 Trace208 "1" *-- "0..*" Checkpoint208
 Issue --> IssueStatus : status
+Issue --> CloseReason : closeReason
 Issue "1" -- "0..*" Ballot : una por votante
 Issue "1" -- "0..*" Bid : bidsByIssue
 Ballot ..> Bid : ranking (ids)

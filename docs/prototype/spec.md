@@ -59,6 +59,9 @@ struct Member {
 
 enum IssueStatus { Open, Awarded, Executed, ClosedWithoutAward }
 
+// Why an issue closed without award; None while Open or when awarded (decided 2026-11-03).
+enum CloseReason { None, NoBids, NoQuorum, NoUniqueWinner, RejectAllWon }
+
 struct Issue {
     address proposer;
     string descriptionCid;  // IPFS CID (Pinata)
@@ -68,6 +71,7 @@ struct Issue {
     uint48 snapshot;        // createdAt - 1
     IssueStatus status;
     uint256 winningBidId;   // 0 if closed without award
+    CloseReason closeReason; // set when closed without award
 }
 
 struct Bid { uint256 issueId; address supplier; uint256 amount; string documentCid; }
@@ -187,9 +191,9 @@ closes without award anyway.
 
 ### Close + award (HU-008) — permissionless
 
-`closeIssue(uint256 issueId)` — reverts if not `Open`, or if neither condition holds:
-(a) voting period ended, or (b) `expressedWeight == totalWeightAt(snapshot)`.
-Reverts during bidding phase.
+`closeIssue(uint256 issueId)` — reverts `IssueNotOpen` if not `Open`; reverts `VotingNotOver`
+during the bidding phase, or during voting unless (b) holds. Allowed when (a) the voting period
+ended, or (b) `expressedWeight == totalWeightAt(snapshot)`.
 
 **Weight resolution** (everything at `s = issue.snapshot`):
 
@@ -207,16 +211,16 @@ expressedWeight = Σ w[v]
 - A delegator who voted directly ⇒ only their own ballot counts (override).
 - Single hop is guaranteed by construction (ADR-0019); no recursion.
 
-**Outcome:**
-1. no bids → `ClosedWithoutAward`
-2. no quorum → `ClosedWithoutAward`. Quorum is reached iff `expressedWeight > 0` and
+**Outcome** (the first that applies; the reason is stored in `closeReason` and emitted):
+1. no bids → `ClosedWithoutAward`, `NoBids`
+2. no quorum → `ClosedWithoutAward`, `NoQuorum`. Quorum is reached iff `expressedWeight > 0` and
    `expressedWeight * 100 >= QUORUM_PERCENT * totalWeightAt(snapshot)` (integer arithmetic, no
    rounding: with total 7 and 50 %, 4 is needed — 3.5 rounds up)
-3. tally (§5); no unique winner → `ClosedWithoutAward`
-4. winner == `REJECT_ALL` → `ClosedWithoutAward`
+3. tally (§5); no unique winner → `ClosedWithoutAward`, `NoUniqueWinner`
+4. winner == `REJECT_ALL` → `ClosedWithoutAward`, `RejectAllWon`
 5. else `Awarded`, `winningBidId = winner`
 
-`ClosedWithoutAward`: `reservedBalance -= ceiling`, event `IssueClosedWithoutAward(issueId)`.
+`ClosedWithoutAward`: `reservedBalance -= ceiling`, event `IssueClosedWithoutAward(issueId, reason)`.
 `Awarded`: reservation kept until execution, event `IssueAwarded(issueId, bidId)`.
 In both cases clear `activeIssueOf[proposer]`.
 
@@ -288,7 +292,7 @@ IssueCreated(uint256 indexed issueId, address indexed proposer, uint256 ceiling)
 BidSubmitted(uint256 indexed issueId, uint256 indexed bidId, address indexed supplier, uint256 amount)
 BallotCast(uint256 indexed issueId, address indexed voter)
 IssueAwarded(uint256 indexed issueId, uint256 indexed bidId)
-IssueClosedWithoutAward(uint256 indexed issueId)
+IssueClosedWithoutAward(uint256 indexed issueId, CloseReason reason)   // reason added 2026-11-03
 TransferExecuted(uint256 indexed issueId, address indexed supplier, uint256 amount, uint256 released)
 TreasuryFunded(address indexed from, uint256 amount)          // added 2026-11-02
 ```

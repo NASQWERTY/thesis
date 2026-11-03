@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import {Checkpoints} from "@openzeppelin/contracts/utils/structs/Checkpoints.sol";
 import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+import {SchulzeTally} from "./SchulzeTally.sol";
 
 /// @title Community governance with delegated voting and automatic testnet payment
 /// @notice One deployment per community. See docs/prototype/spec.md.
@@ -36,6 +37,16 @@ contract CommunityGovernance {
         Closed // status != Open; the status gives the detail
     }
 
+    /// @notice Why an issue closed without award (decided 2026-11-03: the members want to know).
+    /// Checked in this order; `None` while open or when awarded.
+    enum CloseReason {
+        None,
+        NoBids,
+        NoQuorum,
+        NoUniqueWinner, // Schulze tie (ADR-0020, ADR-0022)
+        RejectAllWon
+    }
+
     struct Issue {
         address proposer;
         string descriptionCid; // IPFS CID (Pinata); the text itself lives off-chain
@@ -45,6 +56,7 @@ contract CommunityGovernance {
         uint48 snapshot; // createdAt - 1: registry state the issue is decided with
         IssueStatus status;
         uint256 winningBidId; // 0 unless awarded
+        CloseReason closeReason; // set when closed without award
     }
 
     struct Bid {
@@ -96,6 +108,8 @@ contract CommunityGovernance {
     error NotEligibleAtSnapshot(uint256 issueId, address voter);
     error AlreadyVoted(uint256 issueId, address voter);
     error InvalidRanking(uint256 issueId);
+    error IssueNotOpen(uint256 issueId);
+    error VotingNotOver(uint256 issueId);
 
     // ---------------------------------------------------------------------
     // Events (spec §6)
@@ -111,6 +125,8 @@ contract CommunityGovernance {
     event IssueCreated(uint256 indexed issueId, address indexed proposer, uint256 ceiling);
     event BidSubmitted(uint256 indexed issueId, uint256 indexed bidId, address indexed supplier, uint256 amount);
     event BallotCast(uint256 indexed issueId, address indexed voter);
+    event IssueAwarded(uint256 indexed issueId, uint256 indexed bidId);
+    event IssueClosedWithoutAward(uint256 indexed issueId, CloseReason reason);
     event TreasuryFunded(address indexed from, uint256 amount);
 
     // ---------------------------------------------------------------------
@@ -363,7 +379,8 @@ contract CommunityGovernance {
             // One second before: registry changes in the same block as the creation do not count.
             snapshot: now_ - 1,
             status: IssueStatus.Open,
-            winningBidId: 0
+            winningBidId: 0,
+            closeReason: CloseReason.None
         });
         reservedBalance += ceiling;
         activeIssueOf[msg.sender] = issueId;
@@ -426,6 +443,40 @@ contract CommunityGovernance {
         ballot.ranking = ranking;
 
         emit BallotCast(issueId, msg.sender);
+    }
+
+    // ---------------------------------------------------------------------
+    // Close and award (HU-008)
+    // ---------------------------------------------------------------------
+
+    /// @notice Closes an issue and decides it in the same transaction (ADR-0016). Anyone can call
+    /// it once the voting period has ended, or earlier if all the eligible weight at the snapshot
+    /// has been expressed. The outcome depends only on the ballots and the snapshot.
+    function closeIssue(uint256 issueId) external {
+        Issue storage issue = _issue(issueId);
+        if (issue.status != IssueStatus.Open) revert IssueNotOpen(issueId);
+        uint256 votingStart = _biddingEnd(issue);
+        if (block.timestamp < votingStart) revert VotingNotOver(issueId);
+
+        (address[] memory voters, uint256[] memory weights, uint256 expressed) =
+            _resolveWeights(issueId, issue.snapshot);
+        uint256 total = totalWeightHistory.upperLookup(issue.snapshot);
+        if (block.timestamp < votingStart + VOTING_PERIOD && expressed != total) revert VotingNotOver(issueId);
+
+        (CloseReason reason, uint256 winningBidId) = _outcome(issueId, voters, weights, expressed, total);
+
+        delete activeIssueOf[issue.proposer];
+        if (reason == CloseReason.None) {
+            // The reservation stays until the transfer (HU-009).
+            issue.status = IssueStatus.Awarded;
+            issue.winningBidId = winningBidId;
+            emit IssueAwarded(issueId, winningBidId);
+        } else {
+            issue.status = IssueStatus.ClosedWithoutAward;
+            issue.closeReason = reason;
+            reservedBalance -= issue.ceiling;
+            emit IssueClosedWithoutAward(issueId, reason);
+        }
     }
 
     // ---------------------------------------------------------------------
@@ -534,6 +585,87 @@ contract CommunityGovernance {
                 if (ranking[j] == id) revert InvalidRanking(issueId);
             }
         }
+    }
+
+    /// @dev Weight of each voter at snapshot `s`: their own, plus that of every delegator who did
+    /// not vote, provided the voter (as delegate) was eligible at `s` (spec §4, ADR-0019). A
+    /// delegator who voted counts only for themself. Single hop by construction: one pass is
+    /// enough. O(members²) in memory, with < 50 members.
+    function _resolveWeights(uint256 issueId, uint48 s)
+        private
+        view
+        returns (address[] memory voters, uint256[] memory weights, uint256 expressed)
+    {
+        address[] memory list = memberList;
+        uint256 n = list.length;
+        uint256[] memory own = new uint256[](n);
+        address[] memory delegateOf = new address[](n);
+        bool[] memory cast = new bool[](n);
+        uint256 castCount;
+        for (uint256 i = 0; i < n; i++) {
+            own[i] = weightHistory[list[i]].upperLookup(s);
+            cast[i] = ballots[issueId][list[i]].cast;
+            if (cast[i]) castCount++;
+            else if (own[i] > 0) delegateOf[i] = address(uint160(delegateHistory[list[i]].upperLookup(s)));
+        }
+
+        voters = new address[](castCount);
+        weights = new uint256[](castCount);
+        uint256 k = 0;
+        for (uint256 i = 0; i < n; i++) {
+            if (!cast[i]) continue;
+            uint256 w = own[i];
+            // A delegate not eligible at the snapshot receives nothing: the weight stays with
+            // the delegator, and is lost if the delegator did not vote.
+            if (w > 0) {
+                for (uint256 j = 0; j < n; j++) {
+                    if (!cast[j] && delegateOf[j] == list[i]) w += own[j];
+                }
+            }
+            voters[k] = list[i];
+            weights[k] = w;
+            expressed += w;
+            k++;
+        }
+    }
+
+    /// @dev Outcome checks in spec order: no bids, no quorum, no unique winner, REJECT_ALL wins.
+    /// `CloseReason.None` means awarded to `winningBidId`.
+    function _outcome(
+        uint256 issueId,
+        address[] memory voters,
+        uint256[] memory weights,
+        uint256 expressed,
+        uint256 total
+    ) private view returns (CloseReason reason, uint256 winningBidId) {
+        uint256[] storage bidIds = bidsByIssue[issueId];
+        if (bidIds.length == 0) return (CloseReason.NoBids, 0);
+        // Integer arithmetic, rounding up: with total 7 and 50 %, 4 is needed (ADR-0023).
+        if (expressed == 0 || expressed * 100 < uint256(QUORUM_PERCENT) * total) return (CloseReason.NoQuorum, 0);
+
+        // Tally candidates: index 0 is REJECT_ALL, index i is bidIds[i - 1].
+        uint256 n = bidIds.length + 1;
+        uint256[][] memory rankings = new uint256[][](voters.length);
+        for (uint256 v = 0; v < voters.length; v++) {
+            uint256[] storage ranking = ballots[issueId][voters[v]].ranking;
+            rankings[v] = new uint256[](n);
+            for (uint256 i = 0; i < n; i++) {
+                rankings[v][i] = _candidateIndex(bidIds, ranking[i]);
+            }
+        }
+
+        (bool hasWinner, uint256 winner) = SchulzeTally.tally(rankings, weights, n);
+        if (!hasWinner) return (CloseReason.NoUniqueWinner, 0);
+        if (winner == 0) return (CloseReason.RejectAllWon, 0);
+        return (CloseReason.None, bidIds[winner - 1]);
+    }
+
+    /// @dev Tally index of a ballot entry. castBallot validated every entry, so a bid is always found.
+    function _candidateIndex(uint256[] storage bidIds, uint256 id) private view returns (uint256) {
+        if (id == REJECT_ALL) return 0;
+        uint256 i = 0;
+        while (bidIds[i] != id) i++;
+        return i + 1;
     }
 
     /// @dev First second after the bidding window; voting starts here.

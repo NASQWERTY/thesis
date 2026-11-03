@@ -12,6 +12,9 @@ export default defineConfig({
   plugins: [hardhatToolboxMochaEthersPlugin],
   solidity: {
     version: "0.8.28",
+    // Without the optimizer the bytecode exceeds the 24 KB contract size limit (EIP-170), which
+    // Arbitrum enforces too. Low runs: deployment size matters more than call gas here.
+    settings: { optimizer: { enabled: true, runs: 200 } },
   },
   networks: {
     // Tests use the built-in simulated network ("default"), which only mines on transactions:
