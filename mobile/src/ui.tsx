@@ -64,6 +64,14 @@ export function Button({
   );
 }
 
+export function BackLink({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable onPress={onPress} hitSlop={12} style={{ alignSelf: "flex-start" }}>
+      <Text style={{ color: colors.primary, fontSize: 16, fontWeight: "600" }}>← Volver</Text>
+    </Pressable>
+  );
+}
+
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   content: { padding: 16, gap: 12 },
@@ -100,6 +108,10 @@ export const styles = StyleSheet.create({
     paddingVertical: 2,
     overflow: "hidden",
   },
+  issueTitle: { fontSize: 17, fontWeight: "700", color: colors.text },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, borderColor: colors.border },
+  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
   tabBar: { flexDirection: "row", borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.card },
   tabItem: { flex: 1, paddingVertical: 14, alignItems: "center" },
   tabLabel: { fontSize: 15, fontWeight: "600", color: colors.muted },

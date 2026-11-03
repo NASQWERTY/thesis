@@ -148,3 +148,15 @@ UI polish, attachment preview, wallet UX in the mobile app beyond the minimum.
 - [ ] Deployed contract address + Arbiscan link
 - [ ] Demo video walking the full flow (recommended — the tutor may not run it)
 - [ ] Link inserted in the thesis under the title **Demo** (after Conclusiones, before Referencias)
+
+---
+
+## Ideas for later (not scheduled)
+
+Raised while testing; not part of any HU yet. Pick up only after the Entregable 4 scope is done.
+
+- **Issue description as Markdown** (2026-11-03, author): store the description file on IPFS as
+  `.md` instead of plain text, so the proposer can format it (lists, bold, links) and the
+  clients render it. Today: `descripcion.txt`, title on the first line, then a blank line and
+  the body (member app and simulator). Switching keeps the same convention (`# Título` as the
+  first line) and needs a Markdown renderer in the app and the portal.

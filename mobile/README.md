@@ -4,11 +4,14 @@ React Native app for the community members (Expo SDK 58, TypeScript, ethers v6).
 
 Current state: import a testnet key (QR scan or paste); **Cuestiones** tab with every issue
 (phase, countdown on chain time, ceiling, bids, description preview from IPFS, whether the
-member already voted); **Mi cuenta** tab with the member's status and the treasury, and a test
+member already voted) and **Plantear cuestión** (title + description uploaded to IPFS as a
+text file, topic from a fixed list, ceiling checked against the treasury's free balance);
+**Mi cuenta** tab with the member's status and the treasury, and a test
 contribution to the treasury.
 
 Issue descriptions are read through the Pinata gateway that the upload service (`uploader/`,
 port 8787 on the same PC) reports; without it the list still works, without descriptions.
+Raising an issue requires the uploader (the description must be on IPFS, HU-003).
 
 Wallet strategy (OPEN-7, decided 2026-10-27): the app holds an imported testnet key in the
 device's secure storage (`expo-secure-store`) and signs locally. Prototype limitation.

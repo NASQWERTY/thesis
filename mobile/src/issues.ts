@@ -32,12 +32,28 @@ export interface IssueSummary {
   voted: boolean;
 }
 
+/** Fixed list offered when raising an issue; stored on-chain as bytes32 (the simulator allows any). */
+export const TOPICS = ["general", "mantenimiento", "obras", "limpieza", "seguridad", "servicios"] as const;
+
+export const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
 export function topicLabel(topic: string): string {
   try {
-    return decodeBytes32String(topic) || "sin rubro";
+    return capitalize(decodeBytes32String(topic)) || "Sin rubro";
   } catch {
-    return "sin rubro";
+    return "Sin rubro";
   }
+}
+
+/** Description file stored on IPFS: title on the first line, then a blank line and the body. */
+export const descriptionText = (title: string, body: string) => `${title.trim()}\n\n${body.trim()}\n`;
+
+/** Inverse of `descriptionText`. A file without a body (e.g. one line from the simulator) is all title. */
+export function parseDescription(text: string): { title: string; body: string } {
+  const trimmed = text.trim();
+  const newline = trimmed.indexOf("\n");
+  if (newline === -1) return { title: trimmed, body: "" };
+  return { title: trimmed.slice(0, newline).trim(), body: trimmed.slice(newline + 1).trim() };
 }
 
 export function phaseLabel(phase: Phase, status: Status): { text: string; color: string } {

@@ -3,11 +3,11 @@ import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { formatEther } from "ethers";
 import { short } from "../chain";
 import { useGateway, useIpfsText } from "../ipfs";
-import { loadIssues, phaseLabel, remaining, type IssueSummary } from "../issues";
+import { loadIssues, parseDescription, phaseLabel, remaining, type IssueSummary } from "../issues";
 import type { Chain } from "../useChain";
-import { Card, colors, Row, styles } from "../ui";
+import { Button, Card, colors, Row, styles } from "../ui";
 
-export function IssuesScreen({ chain }: { chain: Chain }) {
+export function IssuesScreen({ chain, onCreate }: { chain: Chain; onCreate: () => void }) {
   const { connection, deployment, rpcUrl } = chain;
   const gateway = useGateway();
   const [issues, setIssues] = useState<IssueSummary[] | null>(null);
@@ -55,6 +55,7 @@ export function IssuesScreen({ chain }: { chain: Chain }) {
     >
       <Text style={styles.h1}>Cuestiones</Text>
       {!deployment && <Text style={styles.error}>No hay un contrato desplegado para esta red.</Text>}
+      {deployment && <Button title="Plantear cuestión" onPress={onCreate} />}
       {error && <Text style={styles.error}>{error}</Text>}
       {issues?.length === 0 && <Text style={styles.p}>Todavía no se planteó ninguna cuestión.</Text>}
       {issues?.map((issue) => (
@@ -75,7 +76,8 @@ function IssueItem({
   now: number;
   me: string | undefined;
 }) {
-  const description = useIpfsText(gateway, issue.descriptionCid);
+  const text = useIpfsText(gateway, issue.descriptionCid);
+  const description = text ? parseDescription(text) : null;
   const phase = phaseLabel(issue.phase, issue.status);
 
   return (
@@ -84,9 +86,20 @@ function IssueItem({
         <Text style={[styles.value, { color: phase.color, textAlign: "left" }]}>{phase.text}</Text>
         <Text style={styles.tag}>{issue.topic}</Text>
       </View>
-      <Text style={styles.p} numberOfLines={3}>
-        {description === undefined ? "Cargando descripción…" : description ?? "Descripción no disponible."}
-      </Text>
+      {description ? (
+        <>
+          <Text style={styles.issueTitle} numberOfLines={2}>
+            {description.title}
+          </Text>
+          {description.body !== "" && (
+            <Text style={styles.p} numberOfLines={2}>
+              {description.body}
+            </Text>
+          )}
+        </>
+      ) : (
+        <Text style={styles.p}>{text === undefined ? "Cargando descripción…" : "Descripción no disponible."}</Text>
+      )}
       {issue.phaseEnd !== null && <Row label="Termina en" value={remaining(issue.phaseEnd - now)} />}
       <Row label="Techo" value={`${formatEther(issue.ceiling)} ETH`} />
       <Row label="Ofertas" value={String(issue.bidCount)} />

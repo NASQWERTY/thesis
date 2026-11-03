@@ -24,3 +24,4 @@ here; the author updates the document and ticks the item.
   - Constructor (Fig. 4 and wherever it is described): `constructor(quorumPercent: uint8, biddingPeriod: uint48, votingPeriod: uint48)`.
   - Tabla 15 (HU-008): the criterion "si no hubo quórum" can stay as is; optionally make it explicit: "si el peso expresado no alcanza el 50 % del peso habilitado en el snapshot".
   - If the thesis says the quorum value is pending (ADR-0020 "Pendiente"), it is now defined.
+- [ ] **HU-003 / member app (decided 2026-11-03):** the issue's topic (`topic`, `bytes32`) is chosen from a fixed list in the app (General, Mantenimiento, Obras, Limpieza, Seguridad, Servicios), stored lowercase. The description file on IPFS holds the title on the first line, a blank line and the body. If a mockup or the data dictionary shows the topic as free text or the title as a separate field, adjust it.

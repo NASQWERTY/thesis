@@ -19,6 +19,7 @@ interface Snapshot {
   receivedWeight: bigint;
   balance: bigint;
   treasury: bigint;
+  reserved: bigint;
 }
 
 export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => void }) {
@@ -38,12 +39,13 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
     setError(null);
     try {
       const { provider, wallet, gov } = connection;
-      const [blockNumber, isSupplier, member, balance, treasury] = await Promise.all([
+      const [blockNumber, isSupplier, member, balance, treasury, reserved] = await Promise.all([
         provider.getBlockNumber(),
         gov.isSupplier(wallet.address),
         gov.members(wallet.address),
         provider.getBalance(wallet.address),
         provider.getBalance(deployment!.address),
+        gov.reservedBalance(),
       ]);
       setData({
         blockNumber,
@@ -55,6 +57,7 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
         receivedWeight: member.receivedWeight,
         balance,
         treasury,
+        reserved,
       });
     } catch {
       setData(null);
@@ -164,6 +167,8 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
       {data && (
         <Card title="Tesorería">
           <Row label="Saldo" value={`${formatEther(data.treasury)} ETH`} />
+          <Row label="Reservado en cuestiones" value={`${formatEther(data.reserved)} ETH`} />
+          <Row label="Libre" value={`${formatEther(data.treasury - data.reserved)} ETH`} />
           <Button title={`Aportar ${CONTRIBUTION} ETH`} onPress={contribute} busy={sending} />
           {txStatus && <Text style={txStatus.startsWith("Error") ? styles.error : styles.p}>{txStatus}</Text>}
         </Card>

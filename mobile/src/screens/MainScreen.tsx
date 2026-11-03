@@ -1,7 +1,8 @@
-import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { BackHandler, Pressable, Text, View } from "react-native";
 import { useChain } from "../useChain";
 import { colors, styles } from "../ui";
+import { CreateIssueScreen } from "./CreateIssueScreen";
 import { HomeScreen } from "./HomeScreen";
 import { IssuesScreen } from "./IssuesScreen";
 
@@ -12,15 +13,32 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]["id"];
 
+/** Screens opened on top of the tabs; "← Volver" or Android's back button closes them. */
+type Route = { name: "createIssue" };
+
 /** Signed-in shell: bottom tabs over a shared chain connection. */
 export function MainScreen({ privateKey, onLogout }: { privateKey: string; onLogout: () => void }) {
   const chain = useChain(privateKey);
   const [tab, setTab] = useState<TabId>("issues");
+  const [route, setRoute] = useState<Route | null>(null);
+
+  useEffect(() => {
+    if (!route) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      setRoute(null);
+      return true;
+    });
+    return () => sub.remove();
+  }, [route]);
+
+  if (route?.name === "createIssue") {
+    return <CreateIssueScreen chain={chain} onDone={() => setRoute(null)} />;
+  }
 
   return (
     <View style={styles.screen}>
       <View style={{ flex: 1 }}>
-        {tab === "issues" && <IssuesScreen chain={chain} />}
+        {tab === "issues" && <IssuesScreen chain={chain} onCreate={() => setRoute({ name: "createIssue" })} />}
         {tab === "account" && <HomeScreen chain={chain} onLogout={onLogout} />}
       </View>
       <View style={styles.tabBar}>

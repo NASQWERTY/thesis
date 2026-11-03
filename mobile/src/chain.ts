@@ -15,6 +15,11 @@ export type Connection = ReturnType<typeof connect>;
 const CONTRACT_ERRORS: Record<string, string> = {
   NotRegistered: "Tu cuenta no está en el padrón.",
   AddressIsSupplier: "La cuenta está registrada como proveedor.",
+  NotEligible: "Tu cuenta está deshabilitada (moroso).",
+  ActiveIssueExists: "Ya tenés una cuestión abierta. Podés plantear otra cuando se cierre.",
+  InsufficientFunds: "El techo supera el saldo libre de la tesorería.",
+  ZeroCeiling: "El techo tiene que ser mayor a cero.",
+  EmptyCid: "Falta la descripción en IPFS.",
 };
 
 /** ethers leaves reverts raised during gas estimation undecoded; decode them with the ABI. */
