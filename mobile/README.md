@@ -6,7 +6,7 @@ Current state: import a testnet key (QR scan or paste); **Cuestiones** tab with 
 (phase, countdown on chain time, ceiling, bids, description preview from IPFS, whether the
 member already voted), an **issue detail** (full description, deadlines, bids with a link to
 each proposal on IPFS, the member's ballot, a **Cerrar cuestión** button once voting has ended
-and the result: awarded bid or why it closed without award), **Votar** (the member taps every bid and
+and the result: awarded bid or why it closed without award; **Ejecutar pago** once awarded), **Votar** (the member taps every bid and
 «Rechazar todas» in order of preference; eligibility and delegation are read at the issue's
 snapshot, as the close resolves them) and **Plantear cuestión**; **Delegación** tab (delegate
 to a member — those the contract would reject are shown disabled with the reason — or revoke) (title + description uploaded to IPFS as a

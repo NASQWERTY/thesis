@@ -21,6 +21,8 @@ import type { Chain } from "../useChain";
 import { useChainData } from "../useChainData";
 import { BackLink, Button, Card, colors, Row, styles } from "../ui";
 
+type SendTx = () => Promise<{ hash: string; wait: () => Promise<unknown> }>;
+
 export function IssueDetailScreen({
   chain,
   issueId,
@@ -40,39 +42,52 @@ export function IssueDetailScreen({
   const { data: issue, error, loading, refresh, now } = useChainData(chain, load);
   const me = chain.connection?.wallet.address;
   const chainId = chain.network.chainId;
+  // Closing and paying: permissionless transactions any member can send from this screen.
   const [step, setStep] = useState<string | null>(null);
-  const [closeError, setCloseError] = useState<string | null>(null);
-  const [closing, setClosing] = useState(false);
+  const [txError, setTxError] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
 
-  function confirmClose() {
-    Alert.alert(
-      "Cerrar cuestión",
-      "Se cuentan los votos y se decide la cuestión: se adjudica la oferta ganadora o, si no hay adjudicación, se libera la reserva. Cualquier miembro puede cerrarla.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Cerrar", onPress: close },
-      ],
-    );
+  function confirm(title: string, message: string, action: string, send: SendTx) {
+    Alert.alert(title, message, [
+      { text: "Cancelar", style: "cancel" },
+      { text: action, onPress: () => run(send) },
+    ]);
   }
 
-  async function close() {
+  async function run(send: SendTx) {
     const { gov } = chain.connection!;
-    setClosing(true);
-    setCloseError(null);
+    setSending(true);
+    setTxError(null);
     try {
       setStep("Enviando transacción…");
-      const tx = await gov.closeIssue(issueId);
+      const tx = await send();
       setStep(`Enviada (${short(tx.hash)}). Esperando confirmación…`);
       await tx.wait();
       setStep(null);
       await refresh();
     } catch (err) {
       setStep(null);
-      setCloseError(describeError(err, gov.interface));
+      setTxError(describeError(err, gov.interface));
     } finally {
-      setClosing(false);
+      setSending(false);
     }
   }
+
+  const closeIssue = () =>
+    confirm(
+      "Cerrar cuestión",
+      "Se cuentan los votos y se decide la cuestión: se adjudica la oferta ganadora o, si no hay adjudicación, se libera la reserva. Cualquier miembro puede cerrarla.",
+      "Cerrar",
+      () => chain.connection!.gov.closeIssue(issueId),
+    );
+
+  const executeTransfer = () =>
+    confirm(
+      "Ejecutar pago",
+      "Se transfiere al proveedor el monto de la oferta adjudicada y vuelve a la tesorería lo que sobra del techo. Cualquier miembro puede ejecutarlo.",
+      "Pagar",
+      () => chain.connection!.gov.executeTransfer(issueId),
+    );
 
   return (
     <ScrollView
@@ -109,14 +124,21 @@ export function IssueDetailScreen({
               <Text style={styles.p}>
                 La votación terminó. Al cerrar la cuestión se cuentan los votos y se conoce el resultado.
               </Text>
-              {closeError && <Text style={styles.error}>{closeError}</Text>}
+              {txError && <Text style={styles.error}>{txError}</Text>}
               {step && <Text style={styles.p}>{step}</Text>}
-              <Button title="Cerrar cuestión" onPress={confirmClose} busy={closing} />
+              <Button title="Cerrar cuestión" onPress={closeIssue} busy={sending} />
             </Card>
           )}
           {issue.phase === Phase.Closed && (
             <Card title="Resultado">
               <Outcome issue={issue} chainId={chainId} />
+              {issue.status === Status.Awarded && (
+                <>
+                  {txError && <Text style={styles.error}>{txError}</Text>}
+                  {step && <Text style={styles.p}>{step}</Text>}
+                  <Button title="Ejecutar pago" onPress={executeTransfer} busy={sending} />
+                </>
+              )}
             </Card>
           )}
 
@@ -165,8 +187,17 @@ function Outcome({ issue, chainId }: { issue: IssueInfo; chainId: number }) {
           <Row label="Monto" value={`${formatEther(winner.amount)} ETH`} />
         </>
       )}
-      {issue.status === Status.Awarded && (
-        <Text style={styles.p}>El pago al proveedor queda pendiente de ejecutarse.</Text>
+      {winner && issue.status === Status.Awarded && (
+        <Text style={styles.p}>
+          El pago al proveedor está pendiente. Al ejecutarlo vuelven a la tesorería{" "}
+          {formatEther(issue.ceiling - winner.amount)} ETH del techo.
+        </Text>
+      )}
+      {winner && issue.status === Status.Executed && (
+        <Text style={styles.p}>
+          Se pagaron {formatEther(winner.amount)} ETH al proveedor y volvieron a la tesorería{" "}
+          {formatEther(issue.ceiling - winner.amount)} ETH del techo.
+        </Text>
       )}
     </>
   );

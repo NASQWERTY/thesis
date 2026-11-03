@@ -33,6 +33,9 @@ const CONTRACT_ERRORS: Record<string, string> = {
   NotDelegating: "No tenés una delegación para revocar.",
   IssueNotOpen: "La cuestión ya está cerrada.",
   VotingNotOver: "La votación todavía no terminó.",
+  NotAwarded: "La cuestión no está adjudicada.",
+  AlreadyExecuted: "El pago ya se ejecutó.",
+  TransferFailed: "El proveedor no aceptó el pago. Se puede volver a intentar.",
 };
 
 /** ethers leaves reverts raised during gas estimation undecoded; decode them with the ABI. */

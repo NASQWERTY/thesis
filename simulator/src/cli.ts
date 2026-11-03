@@ -26,6 +26,8 @@ Comandos:
   fund <eth>                  Envía ETH del registrador a la tesorería del contrato
   close <n>                   Cierra la cuestión n y muestra el resultado (cualquier cuenta
                               puede cerrar; firma el registrador)
+  execute <n>                 Paga al proveedor adjudicado en la cuestión n (también
+                              sin permisos; firma el registrador)
   keys                        Muestra las claves privadas de las cuentas de demo
   qr [miembro] [--html]       Muestra el QR de la clave de cada miembro, para escanear con la app
                               (--html genera una página para abrir en el navegador)
@@ -392,9 +394,8 @@ async function advanceTime(c: Connection, secondsArg?: string) {
  * Closes an issue and prints the outcome. closeIssue is permissionless: the registrar account
  * just pays the gas, any account could do it (ADR-0016).
  */
-async function close(c: Connection, issueArg?: string) {
-  if (!/^[0-9]+$/.test(issueArg ?? "")) throw new UserError("Indicá el número de la cuestión, p. ej. close 1");
-  const issueId = BigInt(issueArg!);
+async function close(c: Connection, arg?: string) {
+  const issueId = issueNumber(arg, "close 1");
   if (!(await send(c, `Cierre de la cuestión #${issueId}`, () => c.gov.closeIssue(issueId)))) return;
 
   const issue = await c.gov.issues(issueId);
@@ -405,6 +406,25 @@ async function close(c: Connection, issueArg?: string) {
   } else {
     console.log(`Cerrada sin adjudicar: ${CLOSE_REASONS[Number(issue.closeReason)]}. Se liberó la reserva.`);
   }
+}
+
+/** Pays the awarded supplier (HU-009). Permissionless too: the registrar account pays the gas. */
+async function execute(c: Connection, arg?: string) {
+  const issueId = issueNumber(arg, "execute 1");
+  const issue = await c.gov.issues(issueId);
+  const bid = await c.gov.bids(issue.winningBidId);
+  const supplier = (await suppliersByAddress()).get(bid.supplier)?.name ?? bid.supplier;
+  const desc = `Pago de la cuestión #${issueId}`;
+  if (!(await send(c, desc, () => c.gov.executeTransfer(issueId)))) return;
+  console.log(
+    `Se pagaron ${formatEther(bid.amount)} ETH a ${supplier}. ` +
+      `Se liberaron ${formatEther(issue.ceiling - bid.amount)} ETH del techo.`,
+  );
+}
+
+function issueNumber(arg: string | undefined, example: string): bigint {
+  if (!/^[0-9]+$/.test(arg ?? "")) throw new UserError(`Indicá el número de la cuestión, p. ej. ${example}`);
+  return BigInt(arg!);
 }
 
 function issueArg(): bigint | undefined {
@@ -437,6 +457,7 @@ async function main() {
     issue: (c) => issue(c, args[0], args[1], args.slice(2).join(" ") || undefined),
     time: (c) => advanceTime(c, args[0]),
     close: (c) => close(c, args[0]),
+    execute: (c) => execute(c, args[0]),
     history: async (c) => history(c, await membersByAddress(), await suppliersByAddress(), issueArg()),
     fund: (c) => fund(c, args[0]),
   };

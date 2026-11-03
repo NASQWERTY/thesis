@@ -16,6 +16,9 @@ const CONTRACT_ERRORS: Record<string, string> = {
   IssueNotFound: "la cuestión no existe",
   IssueNotOpen: "la cuestión ya está cerrada",
   VotingNotOver: "la votación no terminó (y no votó todo el padrón)",
+  NotAwarded: "la cuestión no está adjudicada",
+  AlreadyExecuted: "el pago ya se ejecutó",
+  TransferFailed: "el proveedor no aceptó el pago",
 };
 
 /**
