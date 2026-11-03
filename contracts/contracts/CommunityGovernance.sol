@@ -3,11 +3,12 @@ pragma solidity ^0.8.28;
 
 import {Checkpoints} from "@openzeppelin/contracts/utils/structs/Checkpoints.sol";
 import {Time} from "@openzeppelin/contracts/utils/types/Time.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import {SchulzeTally} from "./SchulzeTally.sol";
 
 /// @title Community governance with delegated voting and automatic testnet payment
 /// @notice One deployment per community. See docs/prototype/spec.md.
-contract CommunityGovernance {
+contract CommunityGovernance is ReentrancyGuard {
     using Checkpoints for Checkpoints.Trace208;
 
     // ---------------------------------------------------------------------
@@ -110,6 +111,9 @@ contract CommunityGovernance {
     error InvalidRanking(uint256 issueId);
     error IssueNotOpen(uint256 issueId);
     error VotingNotOver(uint256 issueId);
+    error NotAwarded(uint256 issueId);
+    error AlreadyExecuted(uint256 issueId);
+    error TransferFailed(address supplier, uint256 amount);
 
     // ---------------------------------------------------------------------
     // Events (spec §6)
@@ -127,6 +131,7 @@ contract CommunityGovernance {
     event BallotCast(uint256 indexed issueId, address indexed voter);
     event IssueAwarded(uint256 indexed issueId, uint256 indexed bidId);
     event IssueClosedWithoutAward(uint256 indexed issueId, CloseReason reason);
+    event TransferExecuted(uint256 indexed issueId, address indexed supplier, uint256 amount, uint256 released);
     event TreasuryFunded(address indexed from, uint256 amount);
 
     // ---------------------------------------------------------------------
@@ -477,6 +482,33 @@ contract CommunityGovernance {
             reservedBalance -= issue.ceiling;
             emit IssueClosedWithoutAward(issueId, reason);
         }
+    }
+
+    // ---------------------------------------------------------------------
+    // Transfer (HU-009)
+    // ---------------------------------------------------------------------
+
+    /// @notice Pays the awarded supplier the amount of their bid. Anyone can call it (ADR-0016).
+    /// The whole ceiling leaves the reservation: the bid amount is paid, the rest
+    /// (`released`) becomes free treasury balance again.
+    function executeTransfer(uint256 issueId) external nonReentrant {
+        Issue storage issue = _issue(issueId);
+        if (issue.status == IssueStatus.Executed) revert AlreadyExecuted(issueId);
+        if (issue.status != IssueStatus.Awarded) revert NotAwarded(issueId);
+
+        Bid storage bid = bids[issue.winningBidId];
+        address supplier = bid.supplier;
+        uint256 amount = bid.amount;
+        uint256 released = issue.ceiling - amount;
+
+        // Effects before the interaction (checks-effects-interactions). If the payment fails,
+        // the whole transaction reverts, the event included.
+        issue.status = IssueStatus.Executed;
+        reservedBalance -= issue.ceiling;
+        emit TransferExecuted(issueId, supplier, amount, released);
+
+        (bool ok,) = supplier.call{value: amount}("");
+        if (!ok) revert TransferFailed(supplier, amount);
     }
 
     // ---------------------------------------------------------------------

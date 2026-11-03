@@ -104,6 +104,11 @@ class IssueStatus {
   ClosedWithoutAward
 }
 
+class ReentrancyGuard {
+  <<abstract>>
+  #nonReentrant()
+}
+
 class SchulzeTally {
   <<library>>
   +tally(rankings : uint256[][], weights : uint256[], n : uint256) (bool, uint256)
@@ -149,6 +154,7 @@ CommunityGovernance "1" *-- "0..*" Ballot : ballots [uint256, address]
 CommunityGovernance "1" *-- "0..*" Bid : bids [uint256]
 CommunityGovernance ..> IssuePhase : phaseOf
 CommunityGovernance ..> SchulzeTally : «use» closeIssue
+ReentrancyGuard <|-- CommunityGovernance
 Trace208 "1" *-- "0..*" Checkpoint208
 Issue --> IssueStatus : status
 Issue --> CloseReason : closeReason

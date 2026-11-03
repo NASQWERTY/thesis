@@ -226,10 +226,12 @@ In both cases clear `activeIssueOf[proposer]`.
 
 ### Execute (HU-009) — permissionless, `nonReentrant`
 
-`executeTransfer(uint256 issueId)` — reverts unless status `Awarded`. Effects first: status
-`Executed`, `reservedBalance -= ceiling`; then send `bid.amount` to `bid.supplier`
-(`call`, revert on failure). `released = ceiling - amount` simply becomes free balance.
-Event `TransferExecuted(issueId, supplier, amount, released)`.
+`executeTransfer(uint256 issueId)` — reverts `AlreadyExecuted` if status `Executed`, `NotAwarded`
+if `Open` or `ClosedWithoutAward` (two errors so clients can tell "already paid" apart; decided
+2026-11-03). Effects first: status `Executed`, `reservedBalance -= ceiling`, event
+`TransferExecuted(issueId, supplier, amount, released)`; then send `bid.amount` to `bid.supplier`
+(`call`; on failure the whole transaction reverts with `TransferFailed(supplier, amount)` and
+can be retried). `released = ceiling - amount` simply becomes free balance.
 
 ### Treasury and views
 
