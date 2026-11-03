@@ -22,10 +22,16 @@ export interface Network {
  * chain started with `npm run node` is at the same IP on port 8545. Falls back to the Android
  * emulator's alias for the host machine.
  */
-function localRpcUrl(): string {
-  const host = Constants.expoConfig?.hostUri?.split(":")[0];
-  return `http://${host ?? "10.0.2.2"}:8545`;
+function pcHost(): string {
+  return Constants.expoConfig?.hostUri?.split(":")[0] ?? "10.0.2.2";
 }
+
+function localRpcUrl(): string {
+  return `http://${pcHost()}:8545`;
+}
+
+/** Upload service (`uploader/`), run on the same PC for both networks: it holds the Pinata JWT. */
+export const UPLOADER_URL = `http://${pcHost()}:8787`;
 
 export const NETWORKS: Record<NetworkId, Network> = {
   local: { id: "local", label: "Local", chainId: 31337, defaultRpcUrl: localRpcUrl },

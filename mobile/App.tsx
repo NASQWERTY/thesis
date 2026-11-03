@@ -3,8 +3,8 @@ import { ActivityIndicator, View } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { loadKey } from "./src/keyStore";
-import { HomeScreen } from "./src/screens/HomeScreen";
 import { ImportKeyScreen } from "./src/screens/ImportKeyScreen";
+import { MainScreen } from "./src/screens/MainScreen";
 import { colors, styles } from "./src/ui";
 
 export default function App() {
@@ -26,7 +26,7 @@ export default function App() {
         ) : privateKey === null ? (
           <ImportKeyScreen onImported={setPrivateKey} />
         ) : (
-          <HomeScreen privateKey={privateKey} onLogout={() => setPrivateKey(null)} />
+          <MainScreen privateKey={privateKey} onLogout={() => setPrivateKey(null)} />
         )}
       </SafeAreaView>
     </SafeAreaProvider>

@@ -2,8 +2,13 @@
 
 React Native app for the community members (Expo SDK 58, TypeScript, ethers v6). UI in Spanish.
 
-Current state: **wallet spike** — import a testnet key (QR scan or paste), read the member's status and the
-treasury from the contract, and sign a transaction (a contribution to the treasury).
+Current state: import a testnet key (QR scan or paste); **Cuestiones** tab with every issue
+(phase, countdown on chain time, ceiling, bids, description preview from IPFS, whether the
+member already voted); **Mi cuenta** tab with the member's status and the treasury, and a test
+contribution to the treasury.
+
+Issue descriptions are read through the Pinata gateway that the upload service (`uploader/`,
+port 8787 on the same PC) reports; without it the list still works, without descriptions.
 
 Wallet strategy (OPEN-7, decided 2026-10-27): the app holds an imported testnet key in the
 device's secure storage (`expo-secure-store`) and signs locally. Prototype limitation.

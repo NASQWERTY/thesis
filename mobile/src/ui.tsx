@@ -91,4 +91,16 @@ export const styles = StyleSheet.create({
   segment: { flexDirection: "row", gap: 8 },
   segmentItem: { flex: 1, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: colors.border, alignItems: "center" },
   segmentItemActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  tag: {
+    fontSize: 13,
+    color: colors.muted,
+    backgroundColor: colors.bg,
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    overflow: "hidden",
+  },
+  tabBar: { flexDirection: "row", borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.card },
+  tabItem: { flex: 1, paddingVertical: 14, alignItems: "center" },
+  tabLabel: { fontSize: 15, fontWeight: "600", color: colors.muted },
 });

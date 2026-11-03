@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, RefreshControl, ScrollView, Text, TextInput, View } from "react-native";
 import { formatEther, parseEther, ZeroAddress } from "ethers";
-import { NETWORKS, type NetworkId } from "../config";
-import { deployments } from "../generated/deployments";
+import { NETWORKS } from "../config";
 import { clearKey } from "../keyStore";
-import { connect, describeError, short } from "../chain";
+import { describeError, short } from "../chain";
+import type { Chain } from "../useChain";
 import { Button, Card, colors, Row, styles } from "../ui";
 
 const CONTRIBUTION = "0.001";
@@ -21,24 +21,16 @@ interface Snapshot {
   treasury: bigint;
 }
 
-export function HomeScreen({ privateKey, onLogout }: { privateKey: string; onLogout: () => void }) {
-  const [networkId, setNetworkId] = useState<NetworkId>("local");
-  const network = NETWORKS[networkId];
-  const [rpcUrl, setRpcUrl] = useState(network.defaultRpcUrl());
+export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => void }) {
+  const { network, rpcUrl, deployment, connection } = chain;
   const [rpcDraft, setRpcDraft] = useState(rpcUrl);
-  const deployment = deployments[network.chainId];
+  useEffect(() => setRpcDraft(rpcUrl), [rpcUrl]);
 
   const [data, setData] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [txStatus, setTxStatus] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
-
-  const connection = useMemo(
-    () => (deployment ? connect(network, rpcUrl, deployment, privateKey) : null),
-    [network, rpcUrl, deployment, privateKey],
-  );
-  useEffect(() => () => connection?.provider.destroy(), [connection]);
 
   const refresh = useCallback(async () => {
     if (!connection) return;
@@ -77,13 +69,6 @@ export function HomeScreen({ privateKey, onLogout }: { privateKey: string; onLog
     setTxStatus(null);
     refresh();
   }, [refresh]);
-
-  function selectNetwork(id: NetworkId) {
-    const url = NETWORKS[id].defaultRpcUrl();
-    setNetworkId(id);
-    setRpcUrl(url);
-    setRpcDraft(url);
-  }
 
   async function contribute() {
     if (!connection) return;
@@ -132,10 +117,10 @@ export function HomeScreen({ privateKey, onLogout }: { privateKey: string; onLog
           {Object.values(NETWORKS).map((n) => (
             <Pressable
               key={n.id}
-              onPress={() => selectNetwork(n.id)}
-              style={[styles.segmentItem, n.id === networkId && styles.segmentItemActive]}
+              onPress={() => chain.selectNetwork(n.id)}
+              style={[styles.segmentItem, n.id === network.id && styles.segmentItemActive]}
             >
-              <Text style={{ color: n.id === networkId ? "#fff" : colors.text, fontWeight: "600" }}>{n.label}</Text>
+              <Text style={{ color: n.id === network.id ? "#fff" : colors.text, fontWeight: "600" }}>{n.label}</Text>
             </Pressable>
           ))}
         </View>
@@ -143,7 +128,7 @@ export function HomeScreen({ privateKey, onLogout }: { privateKey: string; onLog
           style={styles.input}
           value={rpcDraft}
           onChangeText={setRpcDraft}
-          onSubmitEditing={() => setRpcUrl(rpcDraft.trim())}
+          onSubmitEditing={() => chain.setRpcUrl(rpcDraft.trim())}
           autoCapitalize="none"
           autoCorrect={false}
           keyboardType="url"
