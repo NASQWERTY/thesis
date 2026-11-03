@@ -44,12 +44,12 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  async function connect() {
+  async function connect(options?: { account?: string; pickAccount?: boolean }) {
     if (!deployment) return;
     setConnecting(true);
     setError(null);
     try {
-      setSession(await connectWallet(network, deployment));
+      setSession(await connectWallet(network, deployment, options));
     } catch (err) {
       setError(err instanceof Error && !("code" in err) ? err.message : describeError(err));
     } finally {
@@ -57,11 +57,16 @@ export default function App() {
     }
   }
 
-  // MetaMask: switching account reconnects; switching network reloads the page.
+  // MetaMask: switching to a connected account reconnects with it (no accounts left = disconnected);
+  // switching network reloads the page.
   useEffect(() => {
     const eth = window.ethereum;
     if (!eth?.on || !session) return;
-    const onAccounts = () => connect();
+    const onAccounts = (accounts: unknown) => {
+      const [account] = accounts as string[];
+      if (account) connect({ account });
+      else setSession(null);
+    };
     const onChain = () => window.location.reload();
     eth.on("accountsChanged", onAccounts);
     eth.on("chainChanged", onChain);
@@ -145,6 +150,9 @@ export default function App() {
               <span className="mono">{short(session.account)}</span>
               <span className="muted">{formatEther(balance)} ETH</span>
               <span className="tag">{network.label}</span>
+              <button className="secondary" onClick={() => connect({ pickAccount: true })} disabled={connecting}>
+                Cambiar cuenta
+              </button>
             </>
           ) : (
             <>
@@ -156,7 +164,7 @@ export default function App() {
                   </option>
                 ))}
               </select>
-              <button onClick={connect} disabled={connecting || !deployment}>
+              <button onClick={() => connect()} disabled={connecting || !deployment}>
                 {connecting ? "Conectando…" : "Conectar MetaMask"}
               </button>
             </>

@@ -28,11 +28,21 @@ export interface Session {
   provider: JsonRpcProvider;
 }
 
-/** Asks MetaMask for an account and puts it on `network`, adding the network if needed. */
-export async function connectWallet(network: Network, deployment: Deployment): Promise<Session> {
+/**
+ * Asks MetaMask for an account and puts it on `network`, adding the network if needed.
+ * @param account use this one (from `accountsChanged`) instead of MetaMask's first permitted one.
+ * @param pickAccount reopen MetaMask's account picker. MetaMask connects each account to the site
+ * separately: switching to an account that was never connected does not reach the page.
+ */
+export async function connectWallet(
+  network: Network,
+  deployment: Deployment,
+  { account, pickAccount }: { account?: string; pickAccount?: boolean } = {},
+): Promise<Session> {
   const eth = window.ethereum;
   if (!eth) throw new Error("No se encontró MetaMask. Instalá la extensión y recargá la página.");
 
+  if (pickAccount) await eth.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] });
   await eth.request({ method: "eth_requestAccounts" });
   const chainId = `0x${network.chainId.toString(16)}`;
   try {
@@ -54,7 +64,7 @@ export async function connectWallet(network: Network, deployment: Deployment): P
     });
   }
 
-  const signer = await new BrowserProvider(eth).getSigner();
+  const signer = await new BrowserProvider(eth).getSigner(account);
   // cacheTimeout -1: no stale responses (same reason as in the simulator and the app).
   const provider = new JsonRpcProvider(network.rpcUrl, network.chainId, { staticNetwork: true, cacheTimeout: -1 });
   return {
