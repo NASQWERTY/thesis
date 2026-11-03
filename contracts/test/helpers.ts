@@ -39,3 +39,15 @@ export async function withIssueFixture() {
   const createdAt = BigInt(await networkHelpers.time.latest());
   return { ...f, issueId: 1n, createdAt, ceiling: ethers.parseEther("4") };
 }
+
+export const DOC = "bafkreidoc4ldyiwrc5qanpqfhc2yzdizt3mjv5gr4bjcbeiyd2bgrssfoa";
+
+/** withIssueFixture + bids #1 (carol, 3 ETH) and #2 (erin, 2 ETH), moved to the voting phase. */
+export async function votingFixture() {
+  const f = await withIssueFixture();
+  await f.gov.connect(f.carol).submitBid(f.issueId, ethers.parseEther("3"), DOC);
+  await f.gov.connect(f.erin).submitBid(f.issueId, ethers.parseEther("2"), DOC);
+  const votingStart = f.createdAt + BigInt(BIDDING_PERIOD);
+  await networkHelpers.time.increaseTo(votingStart);
+  return { ...f, carolBid: 1n, erinBid: 2n, votingStart, votingEnd: votingStart + BigInt(VOTING_PERIOD) };
+}

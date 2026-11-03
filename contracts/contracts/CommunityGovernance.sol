@@ -54,6 +54,13 @@ contract CommunityGovernance {
         string documentCid; // IPFS CID of the proposal document, uploaded by the supplier portal
     }
 
+    /// @notice A complete ranking of the candidates, most preferred first. Immutable once cast;
+    /// it carries no weight: weights are resolved at close, at the snapshot (ADR-0019).
+    struct Ballot {
+        bool cast;
+        uint256[] ranking; // bid ids of the issue plus REJECT_ALL, each exactly once
+    }
+
     // ---------------------------------------------------------------------
     // Errors
     // ---------------------------------------------------------------------
@@ -85,6 +92,10 @@ contract CommunityGovernance {
     error DelegateIsDelegating(address delegate);
     error DelegationCapExceeded(uint256 controlledWeight, uint256 totalWeight);
     error NotDelegating(address member);
+    error NotInVotingPhase(uint256 issueId);
+    error NotEligibleAtSnapshot(uint256 issueId, address voter);
+    error AlreadyVoted(uint256 issueId, address voter);
+    error InvalidRanking(uint256 issueId);
 
     // ---------------------------------------------------------------------
     // Events (spec §6)
@@ -99,6 +110,7 @@ contract CommunityGovernance {
     event DelegationRevoked(address indexed delegator);
     event IssueCreated(uint256 indexed issueId, address indexed proposer, uint256 ceiling);
     event BidSubmitted(uint256 indexed issueId, uint256 indexed bidId, address indexed supplier, uint256 amount);
+    event BallotCast(uint256 indexed issueId, address indexed voter);
     event TreasuryFunded(address indexed from, uint256 amount);
 
     // ---------------------------------------------------------------------
@@ -168,6 +180,9 @@ contract CommunityGovernance {
 
     /// @notice One bid per supplier per issue (ADR-0019).
     mapping(uint256 => mapping(address => bool)) public hasBid;
+
+    /// @dev issueId => voter => ballot. Read with getBallot: an auto-getter would omit the ranking.
+    mapping(uint256 => mapping(address => Ballot)) private ballots;
 
     // ---------------------------------------------------------------------
     // Constructor
@@ -386,6 +401,34 @@ contract CommunityGovernance {
     }
 
     // ---------------------------------------------------------------------
+    // Voting (HU-007)
+    // ---------------------------------------------------------------------
+
+    /// @notice Casts the caller's ballot: a complete ranking of the issue's bids plus REJECT_ALL.
+    /// The right to vote comes from the snapshot: the caller must have had weight when the issue
+    /// was created, whatever happened to the registry since. Voting directly overrides the
+    /// caller's delegation for this issue (resolved at close).
+    function castBallot(uint256 issueId, uint256[] calldata ranking) external {
+        Issue storage issue = _issue(issueId);
+        uint256 votingStart = _biddingEnd(issue);
+        if (
+            issue.status != IssueStatus.Open || block.timestamp < votingStart
+                || block.timestamp >= votingStart + VOTING_PERIOD
+        ) revert NotInVotingPhase(issueId);
+        if (weightHistory[msg.sender].upperLookup(issue.snapshot) == 0) {
+            revert NotEligibleAtSnapshot(issueId, msg.sender);
+        }
+        Ballot storage ballot = ballots[issueId][msg.sender];
+        if (ballot.cast) revert AlreadyVoted(issueId, msg.sender);
+        _checkRanking(issueId, ranking);
+
+        ballot.cast = true;
+        ballot.ranking = ranking;
+
+        emit BallotCast(issueId, msg.sender);
+    }
+
+    // ---------------------------------------------------------------------
     // Treasury
     // ---------------------------------------------------------------------
 
@@ -407,6 +450,11 @@ contract CommunityGovernance {
     /// @notice Sum of effective weights at `time`.
     function totalWeightAt(uint48 time) external view returns (uint208) {
         return totalWeightHistory.upperLookup(time);
+    }
+
+    /// @notice The voter's ballot on an issue (`cast == false` and an empty ranking if none).
+    function getBallot(uint256 issueId, address voter) external view returns (Ballot memory) {
+        return ballots[issueId][voter];
     }
 
     /// @notice Delegate of `member` at `time` (address(0) if none).
@@ -472,6 +520,20 @@ contract CommunityGovernance {
         Member storage m = members[account];
         if (!m.registered) revert NotRegistered(account);
         if (!m.eligible) revert NotEligible(account);
+    }
+
+    /// @dev A ranking is valid if it is a permutation of {REJECT_ALL} ∪ bidsByIssue[issueId]: right
+    /// length, every id a candidate of this issue, no repetitions. O(n²) with n ≤ ~6 candidates.
+    function _checkRanking(uint256 issueId, uint256[] calldata ranking) private view {
+        if (ranking.length != bidsByIssue[issueId].length + 1) revert InvalidRanking(issueId);
+        for (uint256 i = 0; i < ranking.length; i++) {
+            uint256 id = ranking[i];
+            // A bid id that does not exist has issueId 0, which is never a real issue.
+            if (id != REJECT_ALL && bids[id].issueId != issueId) revert InvalidRanking(issueId);
+            for (uint256 j = 0; j < i; j++) {
+                if (ranking[j] == id) revert InvalidRanking(issueId);
+            }
+        }
     }
 
     /// @dev First second after the bidding window; voting starts here.
