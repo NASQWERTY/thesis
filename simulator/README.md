@@ -30,6 +30,7 @@ npm run sim -- <command> [args] [--network local|sepolia]    # default: local
 | `list` | Registry, suppliers, treasury balance and contract parameters |
 | `fund <eth>` | Sends ETH from the registrar to the treasury |
 | `history [--issue <n>]` | Consultable history: every contract event since the deployment (or only one issue's), decoded, with block, date and transaction |
+| `close <n>` | Closes issue `n` and prints the outcome: awarded bid, or why it closed without award. `closeIssue` is permissionless; the registrar account only pays the gas |
 | `keys` | Prints the private keys of the demo accounts |
 | `qr [member] [--html]` | QR code of each member's key (all, or one) for the member app to scan. `--html` writes `qr.<network>.html` (not committed) to open in a browser |
 | `accounts <n>` | Generates `n` new accounts for the testnet → `accounts.sepolia.json` (not committed) |

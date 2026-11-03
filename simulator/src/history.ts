@@ -17,7 +17,7 @@ const eth = (wei: bigint) => `${formatEther(wei)} ETH`;
 
 /** [title, detail] for each event of spec §6, in Spanish. */
 // CommunityGovernance.CloseReason (index 0, None, never appears in the event).
-const CLOSE_REASONS = ["", "sin ofertas", "sin quórum", "sin ganador único (empate)", "ganó «rechazar todas»"];
+export const CLOSE_REASONS = ["", "sin ofertas", "sin quórum", "sin ganador único (empate)", "ganó «rechazar todas»"];
 
 const FORMAT: Record<string, (a: Args, n: Names) => [string, string]> = {
   MemberRegistered: (a, n) => ["Alta de miembro", `${n.member(a.member)} · peso ${a.weight}`],

@@ -1,12 +1,22 @@
-import { useCallback } from "react";
-import { Linking, RefreshControl, ScrollView, Text, View } from "react-native";
+import { useCallback, useState } from "react";
+import { Alert, Linking, RefreshControl, ScrollView, Text, View } from "react-native";
 import { formatEther } from "ethers";
-import { type Connection } from "../chain";
+import { describeError, short, type Connection } from "../chain";
 import { displayName } from "../directory";
 import type { Deployment } from "../config";
 import { useGateway } from "../ipfs";
 import { Description, PhaseAndTopic } from "../issueViews";
-import { formatTime, loadIssue, Phase, REJECT_ALL, remaining, Status, type BidInfo, type IssueInfo } from "../issues";
+import {
+  CLOSE_REASON_TEXT,
+  formatTime,
+  loadIssue,
+  Phase,
+  REJECT_ALL,
+  remaining,
+  Status,
+  type BidInfo,
+  type IssueInfo,
+} from "../issues";
 import type { Chain } from "../useChain";
 import { useChainData } from "../useChainData";
 import { BackLink, Button, Card, colors, Row, styles } from "../ui";
@@ -30,6 +40,39 @@ export function IssueDetailScreen({
   const { data: issue, error, loading, refresh, now } = useChainData(chain, load);
   const me = chain.connection?.wallet.address;
   const chainId = chain.network.chainId;
+  const [step, setStep] = useState<string | null>(null);
+  const [closeError, setCloseError] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
+
+  function confirmClose() {
+    Alert.alert(
+      "Cerrar cuestión",
+      "Se cuentan los votos y se decide la cuestión: se adjudica la oferta ganadora o, si no hay adjudicación, se libera la reserva. Cualquier miembro puede cerrarla.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        { text: "Cerrar", onPress: close },
+      ],
+    );
+  }
+
+  async function close() {
+    const { gov } = chain.connection!;
+    setClosing(true);
+    setCloseError(null);
+    try {
+      setStep("Enviando transacción…");
+      const tx = await gov.closeIssue(issueId);
+      setStep(`Enviada (${short(tx.hash)}). Esperando confirmación…`);
+      await tx.wait();
+      setStep(null);
+      await refresh();
+    } catch (err) {
+      setStep(null);
+      setCloseError(describeError(err, gov.interface));
+    } finally {
+      setClosing(false);
+    }
+  }
 
   return (
     <ScrollView
@@ -61,6 +104,22 @@ export function IssueDetailScreen({
             <Row label="Fin de votación" value={formatTime(issue.votingEnd)} />
           </Card>
 
+          {issue.phase === Phase.VotingEnded && (
+            <Card title="Resultado">
+              <Text style={styles.p}>
+                La votación terminó. Al cerrar la cuestión se cuentan los votos y se conoce el resultado.
+              </Text>
+              {closeError && <Text style={styles.error}>{closeError}</Text>}
+              {step && <Text style={styles.p}>{step}</Text>}
+              <Button title="Cerrar cuestión" onPress={confirmClose} busy={closing} />
+            </Card>
+          )}
+          {issue.phase === Phase.Closed && (
+            <Card title="Resultado">
+              <Outcome issue={issue} chainId={chainId} />
+            </Card>
+          )}
+
           <Card title={`Ofertas (${issue.bids.length})`}>
             {issue.bids.length === 0 && (
               <Text style={styles.p}>
@@ -78,6 +137,38 @@ export function IssueDetailScreen({
         </>
       )}
     </ScrollView>
+  );
+}
+
+function Outcome({ issue, chainId }: { issue: IssueInfo; chainId: number }) {
+  const winner = issue.bids.find((b) => b.id === issue.winningBidId);
+  if (issue.status === Status.ClosedWithoutAward) {
+    return (
+      <>
+        <Text style={[styles.issueTitle, { color: colors.muted }]}>Cerrada sin adjudicar</Text>
+        <Text style={styles.p}>
+          Motivo: {CLOSE_REASON_TEXT[issue.closeReason]}. Se liberaron {formatEther(issue.ceiling)} ETH de la
+          tesorería.
+        </Text>
+      </>
+    );
+  }
+  return (
+    <>
+      <Text style={[styles.issueTitle, { color: colors.ok }]}>
+        {issue.status === Status.Executed ? "Adjudicada y pagada" : "Adjudicada"}
+      </Text>
+      {winner && (
+        <>
+          <Row label="Oferta" value={`#${winner.id}`} />
+          <Row label="Proveedor" value={displayName(chainId, winner.supplier)} />
+          <Row label="Monto" value={`${formatEther(winner.amount)} ETH`} />
+        </>
+      )}
+      {issue.status === Status.Awarded && (
+        <Text style={styles.p}>El pago al proveedor queda pendiente de ejecutarse.</Text>
+      )}
+    </>
   );
 }
 

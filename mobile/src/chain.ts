@@ -31,6 +31,8 @@ const CONTRACT_ERRORS: Record<string, string> = {
   DelegateIsDelegating: "Ese miembro delegó su voto: no puede recibir delegaciones.",
   DelegationCapExceeded: "Superaría el tope: nadie puede controlar más de un tercio del peso total.",
   NotDelegating: "No tenés una delegación para revocar.",
+  IssueNotOpen: "La cuestión ya está cerrada.",
+  VotingNotOver: "La votación todavía no terminó.",
 };
 
 /** ethers leaves reverts raised during gas estimation undecoded; decode them with the ABI. */

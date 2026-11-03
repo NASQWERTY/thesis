@@ -9,7 +9,7 @@ import QRCode from "qrcode";
 import { connect, dataDir, hardhatAccount, type Connection, type NetworkName } from "./chain.ts";
 import { readMembers, readSuppliers, type MemberRow, type SupplierRow } from "./csv.ts";
 import { describeError, UserError } from "./errors.ts";
-import { history } from "./history.ts";
+import { CLOSE_REASONS, history } from "./history.ts";
 
 const HELP = `Simulador de empadronamiento (registrador)
 
@@ -24,6 +24,8 @@ Comandos:
   list                        Muestra el padrón, los proveedores y la tesorería
   history [--issue <n>]       Historial de eventos del contrato (o de una cuestión)
   fund <eth>                  Envía ETH del registrador a la tesorería del contrato
+  close <n>                   Cierra la cuestión n y muestra el resultado (cualquier cuenta
+                              puede cerrar; firma el registrador)
   keys                        Muestra las claves privadas de las cuentas de demo
   qr [miembro] [--html]       Muestra el QR de la clave de cada miembro, para escanear con la app
                               (--html genera una página para abrir en el navegador)
@@ -386,6 +388,25 @@ async function advanceTime(c: Connection, secondsArg?: string) {
   console.log(`Reloj adelantado ${seconds} s. Hora de la cadena: ${new Date(block.timestamp * 1000).toLocaleString("es-AR", { dateStyle: "short", timeStyle: "medium" })}`);
 }
 
+/**
+ * Closes an issue and prints the outcome. closeIssue is permissionless: the registrar account
+ * just pays the gas, any account could do it (ADR-0016).
+ */
+async function close(c: Connection, issueArg?: string) {
+  if (!/^[0-9]+$/.test(issueArg ?? "")) throw new UserError("Indicá el número de la cuestión, p. ej. close 1");
+  const issueId = BigInt(issueArg!);
+  if (!(await send(c, `Cierre de la cuestión #${issueId}`, () => c.gov.closeIssue(issueId)))) return;
+
+  const issue = await c.gov.issues(issueId);
+  if (issue.status === 1n) {
+    const bid = await c.gov.bids(issue.winningBidId);
+    const supplier = (await suppliersByAddress()).get(bid.supplier)?.name ?? bid.supplier;
+    console.log(`Adjudicada a la oferta #${issue.winningBidId}: ${supplier} · ${formatEther(bid.amount)} ETH`);
+  } else {
+    console.log(`Cerrada sin adjudicar: ${CLOSE_REASONS[Number(issue.closeReason)]}. Se liberó la reserva.`);
+  }
+}
+
 function issueArg(): bigint | undefined {
   if (opts.issue === undefined) return undefined;
   if (!/^[0-9]+$/.test(opts.issue)) throw new UserError("--issue debe ser el número de la cuestión");
@@ -415,6 +436,7 @@ async function main() {
     list: (c) => list(c),
     issue: (c) => issue(c, args[0], args[1], args.slice(2).join(" ") || undefined),
     time: (c) => advanceTime(c, args[0]),
+    close: (c) => close(c, args[0]),
     history: async (c) => history(c, await membersByAddress(), await suppliersByAddress(), issueArg()),
     fund: (c) => fund(c, args[0]),
   };

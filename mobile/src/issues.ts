@@ -3,7 +3,7 @@ import type { Connection } from "./chain";
 import type { Deployment } from "./config";
 import { colors } from "./ui";
 
-// Mirror the contract enums (CommunityGovernance.IssuePhase / IssueStatus).
+// Mirror the contract enums (CommunityGovernance.IssuePhase / IssueStatus / CloseReason).
 export enum Phase {
   Bidding,
   Voting,
@@ -17,6 +17,23 @@ export enum Status {
   Executed,
   ClosedWithoutAward,
 }
+
+export enum CloseReason {
+  None,
+  NoBids,
+  NoQuorum,
+  NoUniqueWinner,
+  RejectAllWon,
+}
+
+/** Why an issue closed without award, as the member reads it. */
+export const CLOSE_REASON_TEXT: Record<CloseReason, string> = {
+  [CloseReason.None]: "",
+  [CloseReason.NoBids]: "no se presentaron ofertas",
+  [CloseReason.NoQuorum]: "no hubo quórum",
+  [CloseReason.NoUniqueWinner]: "no hubo un ganador único (empate)",
+  [CloseReason.RejectAllWon]: "ganó «Rechazar todas»",
+};
 
 /** Ballot entry that rejects every bid (CommunityGovernance.REJECT_ALL). */
 export const REJECT_ALL = 0n;
@@ -37,6 +54,7 @@ export interface IssueInfo {
   phase: Phase;
   status: Status;
   winningBidId: bigint;
+  closeReason: CloseReason;
   /** Chain timestamps. The registry (weights, delegations) is read at `snapshot`. */
   snapshot: number;
   biddingEnd: number;
@@ -80,7 +98,7 @@ export function phaseLabel(phase: Phase, status: Status): { text: string; color:
     case Phase.Voting:
       return { text: "En votación", color: colors.ok };
     case Phase.VotingEnded:
-      return { text: "Votación terminada", color: colors.warn };
+      return { text: "Votación terminada, falta cerrarla", color: colors.warn };
     default:
       if (status === Status.Awarded) return { text: "Adjudicada", color: colors.ok };
       if (status === Status.Executed) return { text: "Pagada", color: colors.ok };
@@ -109,6 +127,7 @@ export async function loadIssue({ gov, wallet }: Connection, deployment: Deploym
     phase: p,
     status: Number(issue.status) as Status,
     winningBidId: issue.winningBidId,
+    closeReason: Number(issue.closeReason) as CloseReason,
     snapshot: Number(issue.snapshot),
     biddingEnd,
     votingEnd,

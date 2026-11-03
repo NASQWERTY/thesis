@@ -13,6 +13,9 @@ const CONTRACT_ERRORS: Record<string, string> = {
   AddressIsSupplier: "la dirección está registrada como proveedor",
   AddressIsMember: "la dirección es o fue miembro del padrón",
   EligibilityUnchanged: "la habilitación ya tiene ese valor",
+  IssueNotFound: "la cuestión no existe",
+  IssueNotOpen: "la cuestión ya está cerrada",
+  VotingNotOver: "la votación no terminó (y no votó todo el padrón)",
 };
 
 /**
