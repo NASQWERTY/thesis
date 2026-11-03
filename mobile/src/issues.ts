@@ -37,7 +37,8 @@ export interface IssueInfo {
   phase: Phase;
   status: Status;
   winningBidId: bigint;
-  /** Chain timestamps. */
+  /** Chain timestamps. The registry (weights, delegations) is read at `snapshot`. */
+  snapshot: number;
   biddingEnd: number;
   votingEnd: number;
   /** Chain timestamp at which the current phase ends; null once voting has ended. */
@@ -108,6 +109,7 @@ export async function loadIssue({ gov, wallet }: Connection, deployment: Deploym
     phase: p,
     status: Number(issue.status) as Status,
     winningBidId: issue.winningBidId,
+    snapshot: Number(issue.snapshot),
     biddingEnd,
     votingEnd,
     phaseEnd: p === Phase.Bidding ? biddingEnd : p === Phase.Voting ? votingEnd : null,

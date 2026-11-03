@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { BackHandler, Pressable, Text, View } from "react-native";
 import { useChain } from "../useChain";
 import { colors, styles } from "../ui";
+import { CastBallotScreen } from "./CastBallotScreen";
 import { CreateIssueScreen } from "./CreateIssueScreen";
 import { HomeScreen } from "./HomeScreen";
 import { IssueDetailScreen } from "./IssueDetailScreen";
@@ -15,7 +16,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 /** Screens opened on top of the tabs; "← Volver" or Android's back button closes them. */
-type Route = { name: "createIssue" } | { name: "issue"; id: bigint };
+type Route = { name: "createIssue" } | { name: "issue"; id: bigint } | { name: "vote"; id: bigint };
 
 /** Signed-in shell: bottom tabs over a shared chain connection. */
 export function MainScreen({ privateKey, onLogout }: { privateKey: string; onLogout: () => void }) {
@@ -23,20 +24,33 @@ export function MainScreen({ privateKey, onLogout }: { privateKey: string; onLog
   const [tab, setTab] = useState<TabId>("issues");
   const [route, setRoute] = useState<Route | null>(null);
 
+  // Voting goes back to its issue; everything else, to the tabs.
+  const back = () => setRoute(route?.name === "vote" ? { name: "issue", id: route.id } : null);
+
   useEffect(() => {
     if (!route) return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      setRoute(null);
+      back();
       return true;
     });
     return () => sub.remove();
-  }, [route]);
+  });
 
   if (route?.name === "createIssue") {
-    return <CreateIssueScreen chain={chain} onDone={() => setRoute(null)} />;
+    return <CreateIssueScreen chain={chain} onDone={back} />;
   }
   if (route?.name === "issue") {
-    return <IssueDetailScreen chain={chain} issueId={route.id} onBack={() => setRoute(null)} />;
+    return (
+      <IssueDetailScreen
+        chain={chain}
+        issueId={route.id}
+        onBack={back}
+        onVote={() => setRoute({ name: "vote", id: route.id })}
+      />
+    );
+  }
+  if (route?.name === "vote") {
+    return <CastBallotScreen chain={chain} issueId={route.id} onDone={back} />;
   }
 
   return (

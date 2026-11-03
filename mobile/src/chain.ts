@@ -20,6 +20,11 @@ const CONTRACT_ERRORS: Record<string, string> = {
   InsufficientFunds: "El techo supera el saldo libre de la tesorería.",
   ZeroCeiling: "El techo tiene que ser mayor a cero.",
   EmptyCid: "Falta la descripción en IPFS.",
+  NotInVotingPhase: "La cuestión no está en período de votación.",
+  NotEligibleAtSnapshot: "No estabas habilitado cuando se creó la cuestión: no podés votarla.",
+  AlreadyVoted: "Ya votaste en esta cuestión. La boleta no se puede cambiar.",
+  InvalidRanking: "La boleta tiene que ordenar todas las ofertas y «Rechazar todas», sin repetir.",
+  IssueNotFound: "La cuestión no existe.",
 };
 
 /** ethers leaves reverts raised during gas estimation undecoded; decode them with the ABI. */

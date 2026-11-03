@@ -10,7 +10,17 @@ import type { Chain } from "../useChain";
 import { useChainData } from "../useChainData";
 import { BackLink, Button, Card, colors, Row, styles } from "../ui";
 
-export function IssueDetailScreen({ chain, issueId, onBack }: { chain: Chain; issueId: bigint; onBack: () => void }) {
+export function IssueDetailScreen({
+  chain,
+  issueId,
+  onBack,
+  onVote,
+}: {
+  chain: Chain;
+  issueId: bigint;
+  onBack: () => void;
+  onVote: () => void;
+}) {
   const gateway = useGateway();
   const load = useCallback(
     (connection: Connection, deployment: Deployment) => loadIssue(connection, deployment, issueId),
@@ -61,7 +71,7 @@ export function IssueDetailScreen({ chain, issueId, onBack }: { chain: Chain; is
           </Card>
 
           <Card title="Tu voto">
-            <Ballot issue={issue} />
+            <Ballot issue={issue} onVote={onVote} />
           </Card>
         </>
       )}
@@ -95,7 +105,7 @@ function BidItem({ bid, issue, gateway }: { bid: BidInfo; issue: IssueInfo; gate
   );
 }
 
-function Ballot({ issue }: { issue: IssueInfo }) {
+function Ballot({ issue, onVote }: { issue: IssueInfo; onVote: () => void }) {
   if (issue.voted) {
     return (
       <>
@@ -112,8 +122,7 @@ function Ballot({ issue }: { issue: IssueInfo }) {
     case Phase.Bidding:
       return <Text style={styles.p}>La votación empieza cuando cierren las ofertas.</Text>;
     case Phase.Voting:
-      // Enabled in the next feature (HU-007).
-      return <Button title="Votar" onPress={() => {}} disabled />;
+      return <Button title="Votar" onPress={onVote} />;
     default:
       return <Text style={styles.p}>No votaste en esta cuestión.</Text>;
   }
