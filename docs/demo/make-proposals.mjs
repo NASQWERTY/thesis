@@ -31,7 +31,7 @@ const SUPPLIERS = {
 
 const PROPOSALS = [
   {
-    file: "1-porton-electricidad-serrana.pdf",
+    file: "porton-electricidad-serrana.pdf",
     supplier: "electricidad",
     number: "ES-2026-0412",
     issue: "Reparación del portón vehicular",
@@ -47,7 +47,7 @@ const PROPOSALS = [
     amount: "0,0025",
   },
   {
-    file: "1-porton-ascensores-andinos.pdf",
+    file: "porton-ascensores-andinos.pdf",
     supplier: "ascensores",
     number: "AA-2026-0098",
     issue: "Reparación del portón vehicular",
@@ -63,7 +63,7 @@ const PROPOSALS = [
     amount: "0,0028",
   },
   {
-    file: "2-pintura-pinturas-del-sur.pdf",
+    file: "pintura-pinturas-del-sur.pdf",
     supplier: "pinturas",
     number: "PS-2026-1187",
     issue: "Pintura del hall del edificio 2",
@@ -79,7 +79,7 @@ const PROPOSALS = [
     amount: "0,0019",
   },
   {
-    file: "2-pintura-electricidad-serrana.pdf",
+    file: "pintura-electricidad-serrana.pdf",
     supplier: "electricidad",
     number: "ES-2026-0415",
     issue: "Pintura del hall del edificio 2",
@@ -93,7 +93,7 @@ const PROPOSALS = [
     amount: "0,0015",
   },
   {
-    file: "3-ascensores-ascensores-andinos.pdf",
+    file: "ascensores-ascensores-andinos.pdf",
     supplier: "ascensores",
     number: "AA-2026-0101",
     issue: "Mantenimiento de ascensores",
@@ -109,7 +109,7 @@ const PROPOSALS = [
     amount: "0,0020",
   },
   {
-    file: "4-luminarias-electricidad-serrana.pdf",
+    file: "luminarias-electricidad-serrana.pdf",
     supplier: "electricidad",
     number: "ES-2026-0420",
     issue: "Cambio de luminarias del estacionamiento",
