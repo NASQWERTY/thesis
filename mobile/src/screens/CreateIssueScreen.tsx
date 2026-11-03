@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { encodeBytes32String, formatEther, parseEther } from "ethers";
-import { describeError, short } from "../chain";
+import { connectionError, describeError, short } from "../chain";
 import { uploadText } from "../ipfs";
 import { capitalize, descriptionText, TOPICS } from "../issues";
 import type { Chain } from "../useChain";
@@ -61,9 +61,9 @@ export function CreateIssueScreen({ chain, onDone }: { chain: Chain; onDone: () 
       setStatus({ isSupplier, registered: member.registered, eligible: member.eligible, activeIssue, available });
       setLoadError(null);
     } catch {
-      setLoadError("No se pudo leer el contrato. ¿Está corriendo el nodo?");
+      setLoadError(connectionError(chain.network));
     }
-  }, [connection]);
+  }, [connection, chain.network]);
 
   useEffect(() => {
     load();

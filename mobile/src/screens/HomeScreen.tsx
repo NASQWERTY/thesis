@@ -3,7 +3,7 @@ import { Alert, Pressable, RefreshControl, ScrollView, Text, TextInput, View } f
 import { formatEther, parseEther, ZeroAddress } from "ethers";
 import { NETWORKS } from "../config";
 import { clearKey } from "../keyStore";
-import { describeError, short } from "../chain";
+import { connectionError, describeError, notAvailable, short } from "../chain";
 import { displayName } from "../directory";
 import type { Chain } from "../useChain";
 import { Button, Card, colors, Row, styles } from "../ui";
@@ -27,6 +27,9 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
   const { network, rpcUrl, deployment, connection } = chain;
   const [rpcDraft, setRpcDraft] = useState(rpcUrl);
   useEffect(() => setRpcDraft(rpcUrl), [rpcUrl]);
+  // Technical data (RPC URL, contract, block) hidden by default; the RPC is editable for the
+  // local demo, where the PC's IP can change.
+  const [advanced, setAdvanced] = useState(false);
 
   const [data, setData] = useState<Snapshot | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -62,11 +65,11 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
       });
     } catch {
       setData(null);
-      setError(`No se pudo conectar a ${rpcUrl}. ¿Está corriendo el nodo y el celular está en la misma WiFi que la PC?`);
+      setError(connectionError(network));
     } finally {
       setLoading(false);
     }
-  }, [connection, deployment, rpcUrl]);
+  }, [connection, deployment, network]);
 
   useEffect(() => {
     setData(null);
@@ -128,24 +131,29 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
             </Pressable>
           ))}
         </View>
-        <TextInput
-          style={styles.input}
-          value={rpcDraft}
-          onChangeText={setRpcDraft}
-          onSubmitEditing={() => chain.setRpcUrl(rpcDraft.trim())}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="url"
-          returnKeyType="done"
-        />
-        {deployment ? (
-          <Row label="Contrato" value={short(deployment.address)} />
-        ) : (
-          <Text style={styles.error}>
-            No hay un contrato desplegado para esta red. Corré el deploy en contracts/ y reiniciá la app con «npm start».
+        {!deployment && <Text style={styles.error}>{notAvailable(network)}</Text>}
+        <Pressable onPress={() => setAdvanced((a) => !a)} hitSlop={8}>
+          <Text style={{ color: colors.primary, fontWeight: "600" }}>
+            {advanced ? "▾ Ocultar opciones avanzadas" : "▸ Opciones avanzadas"}
           </Text>
+        </Pressable>
+        {advanced && (
+          <>
+            <Text style={styles.label}>Dirección del nodo (RPC)</Text>
+            <TextInput
+              style={styles.input}
+              value={rpcDraft}
+              onChangeText={setRpcDraft}
+              onSubmitEditing={() => chain.setRpcUrl(rpcDraft.trim())}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              returnKeyType="done"
+            />
+            {deployment && <Row label="Contrato" value={short(deployment.address)} />}
+            {data && <Row label="Último bloque" value={String(data.blockNumber)} />}
+          </>
         )}
-        {data && <Row label="Último bloque" value={String(data.blockNumber)} />}
       </Card>
 
       {error && <Text style={styles.error}>{error}</Text>}

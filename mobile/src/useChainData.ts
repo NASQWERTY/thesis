@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import type { Connection } from "./chain";
+import { connectionError, type Connection } from "./chain";
 import type { Deployment } from "./config";
 import type { Chain } from "./useChain";
 
@@ -12,7 +12,7 @@ const REFRESH_MS = 15000;
  * @param load must be stable (useCallback), or it reloads on every render.
  */
 export function useChainData<T>(chain: Chain, load: (connection: Connection, deployment: Deployment) => Promise<T>) {
-  const { connection, deployment, rpcUrl } = chain;
+  const { connection, deployment } = chain;
   const [data, setData] = useState<T | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -28,11 +28,11 @@ export function useChainData<T>(chain: Chain, load: (connection: Connection, dep
       setClockOffset(block!.timestamp - Date.now() / 1000);
       setError(null);
     } catch {
-      setError(`No se pudo leer el contrato en ${rpcUrl}. ¿Está corriendo el nodo?`);
+      setError(connectionError(chain.network));
     } finally {
       setLoading(false);
     }
-  }, [connection, deployment, rpcUrl, load]);
+  }, [connection, deployment, chain.network, load]);
 
   useEffect(() => {
     setData(null);

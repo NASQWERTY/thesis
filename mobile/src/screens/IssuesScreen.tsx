@@ -1,5 +1,6 @@
 import { Pressable, RefreshControl, ScrollView, Text } from "react-native";
 import { formatEther } from "ethers";
+import { notAvailable } from "../chain";
 import { displayName } from "../directory";
 import { useGateway } from "../ipfs";
 import { Description, PhaseAndTopic } from "../issueViews";
@@ -29,7 +30,7 @@ export function IssuesScreen({
       refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} />}
     >
       <Text style={styles.h1}>Cuestiones</Text>
-      {!chain.deployment && <Text style={styles.error}>No hay un contrato desplegado para esta red.</Text>}
+      {!chain.deployment && <Text style={styles.error}>{notAvailable(chain.network)}</Text>}
       {chain.deployment && <Button title="Plantear cuestión" onPress={onCreate} />}
       {error && <Text style={styles.error}>{error}</Text>}
       {issues?.length === 0 && <Text style={styles.p}>Todavía no se planteó ninguna cuestión.</Text>}

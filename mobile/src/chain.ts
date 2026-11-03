@@ -48,4 +48,14 @@ export function describeError(err: unknown, contractInterface: Interface): strin
   return e.shortMessage ?? String(err);
 }
 
-export const short = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
+/** The selected network has no contract in this build of the app. */
+export const notAvailable = (network: Network) => `La red ${network.label} todavía no está disponible.`;
+
+/** The RPC did not answer. The local chain is only used for demos on the same WiFi as the PC. */
+export function connectionError(network: Network): string {
+  return network.id === "local"
+    ? "No se pudo conectar con la red local. Verificá que el celular esté en la misma WiFi que la computadora de la demo."
+    : `No se pudo conectar con ${network.label}. Revisá tu conexión a internet e intentá de nuevo.`;
+}
+
+export const short =(address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;

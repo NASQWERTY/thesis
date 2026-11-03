@@ -84,8 +84,8 @@ export function ImportKeyScreen({ onImported }: { onImported: (privateKey: strin
       </Card>
       {error && <Text style={styles.error}>{error}</Text>}
       <Text style={styles.p}>
-        Prototipo en red de prueba: usá solo cuentas de demo, nunca una clave con fondos reales. En la red local,
-        los QR se generan con «npm run sim -- qr» en la carpeta simulator.
+        Prototipo en red de prueba: usá solo las cuentas de demo que te entregó el registrador, nunca una clave
+        con fondos reales.
       </Text>
     </ScrollView>
   );
