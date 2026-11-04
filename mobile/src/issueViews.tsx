@@ -14,6 +14,23 @@ export function PhaseAndTopic({ issue }: { issue: IssueInfo }) {
   );
 }
 
+/** Phase as a tinted pill (issue list). */
+export function PhasePill({ issue }: { issue: IssueInfo }) {
+  const phase = phaseLabel(issue.phase, issue.status);
+  return <Text style={[styles.pill, { color: phase.color, backgroundColor: `${phase.color}1A` }]}>{phase.text}</Text>;
+}
+
+/** Only the title line of the description, for the compact list; "Cuestión #id" until it loads. */
+export function IssueTitle({ gateway, issue }: { gateway: string | null; issue: IssueInfo }) {
+  const text = useIpfsText(gateway, issue.descriptionCid);
+  const title = text ? parseDescription(text).title : `Cuestión #${issue.id}`;
+  return (
+    <Text style={[styles.issueTitle, { flex: 1 }]} numberOfLines={1}>
+      {title}
+    </Text>
+  );
+}
+
 /** Title and body from the description file on IPFS; `preview` cuts both to two lines. */
 export function Description({ gateway, cid, preview }: { gateway: string | null; cid: string; preview?: boolean }) {
   const text = useIpfsText(gateway, cid);

@@ -42,3 +42,6 @@ export const NETWORKS: Record<NetworkId, Network> = {
     defaultRpcUrl: () => "https://sepolia-rollup.arbitrum.io/rpc",
   },
 };
+
+/** Community shown in the app header. Fixed: the contract does not store a name. */
+export const COMMUNITY_NAME = "Jardines del Sur";
