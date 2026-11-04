@@ -332,17 +332,37 @@ async function qr(memberArg: string | undefined, html: boolean) {
   if (entries.length === 0) throw new UserError("No hay claves conocidas para esos miembros");
 
   if (html) {
+    // Every QR starts hidden; clicking a card shows only that one, so the phone cannot scan the
+    // wrong member by accident. Clicking it again hides it.
     const cards = await Promise.all(
       entries.map(
-        async (m) => `<figure><img src="${await QRCode.toDataURL(m.key!, { margin: 2, width: 260 })}" alt="">
+        async (m) => `<figure tabindex="0"><div class="qr"><img src="${await QRCode.toDataURL(m.key!, { margin: 2, width: 260 })}" alt="">
+  <span>Toque para mostrar</span></div>
   <figcaption><b>${m.unit}</b> ${m.owner}<br><small>${m.address}</small></figcaption></figure>`,
       ),
     );
     const page = `<!doctype html><html lang="es"><meta charset="utf-8"><title>Claves QR (${network})</title>
 <style>body{font-family:system-ui,sans-serif;margin:24px;background:#fff;color:#111}
-main{display:flex;flex-wrap:wrap;gap:24px}figure{margin:0;text-align:center;border:1px solid #ddd;border-radius:8px;padding:12px}
+main{display:flex;flex-wrap:wrap;gap:24px}
+figure{margin:0;text-align:center;border:1px solid #ddd;border-radius:8px;padding:12px;cursor:pointer;user-select:none}
+figure.open{border-color:#1f6feb;box-shadow:0 0 0 3px #1f6feb33}
+.qr{width:260px;height:260px;display:grid;place-items:center;background:#f3f4f6;border-radius:6px}
+.qr img{display:none}.qr span{color:#666}
+figure.open .qr{background:#fff}figure.open .qr img{display:block}figure.open .qr span{display:none}
 small{color:#666;font-size:11px}p{color:#b00}</style>
-<h1>Claves de miembros — ${network}</h1><p>${KEYS_WARNING}</p><main>${cards.join("\n")}</main></html>\n`;
+<h1>Claves de miembros — ${network}</h1><p>${KEYS_WARNING}</p><main>${cards.join("\n")}</main>
+<script>
+const cards = document.querySelectorAll("figure");
+function toggle(card) {
+  const open = !card.classList.contains("open");
+  cards.forEach((c) => c.classList.remove("open"));
+  if (open) card.classList.add("open");
+}
+cards.forEach((c) => {
+  c.addEventListener("click", () => toggle(c));
+  c.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(c); } });
+});
+</script></html>\n`;
     await writeFile(qrHtmlFile, page);
     console.log(`Página con ${entries.length} QR en ${shown(qrHtmlFile)} (no se versiona). Abrila en el navegador.`);
     return;
