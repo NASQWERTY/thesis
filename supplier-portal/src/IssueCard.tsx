@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { formatEther, parseEther } from "ethers";
-import { describeError, short, uploadFile, type Session } from "./chain";
+import { describeError, feeOverrides, short, uploadFile, type Session } from "./chain";
 
 export interface OpenIssue {
   id: bigint;
@@ -151,7 +151,7 @@ function BidForm({
       setStatus("Subiendo el documento a IPFS…");
       const cid = await uploadFile(file);
       setStatus("Confirmá la transacción en MetaMask…");
-      const tx = await session.gov.submitBid(issue.id, wei, cid);
+      const tx = await session.gov.submitBid(issue.id, wei, cid, await feeOverrides(session));
       setStatus("Esperando confirmación de la red…");
       const receipt = await tx.wait();
       const event = receipt.logs

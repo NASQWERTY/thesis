@@ -117,6 +117,16 @@ export function describeError(err: unknown, contractInterface?: Interface): stri
 
 export const short = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
 
+/**
+ * Fees suggested to MetaMask, read from the RPC: ethers sets the max fee to twice the current base
+ * fee plus the tip. MetaMask's own estimate can be so tight that Arbitrum Sepolia rejects it when
+ * the base fee rises a little in the next block ("max fee per gas less than block base fee").
+ */
+export async function feeOverrides(session: Session) {
+  const { maxFeePerGas, maxPriorityFeePerGas } = await session.provider.getFeeData();
+  return maxFeePerGas !== null && maxPriorityFeePerGas !== null ? { maxFeePerGas, maxPriorityFeePerGas } : {};
+}
+
 /** Gateway domain from the uploader, to link IPFS files; null if the uploader is not running. */
 export async function fetchGateway(): Promise<string | null> {
   try {
