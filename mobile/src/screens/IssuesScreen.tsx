@@ -67,8 +67,8 @@ function IssueItem({
       {issue.phaseEnd !== null && <Row label="Termina en" value={remaining(issue.phaseEnd - now)} />}
       <Row label="Techo" value={`${formatEther(issue.ceiling)} ETH`} />
       <Row label="Ofertas" value={String(issue.bids.length)} />
-      <Row label="Propuesta por" value={issue.proposer === me ? "vos" : displayName(chainId, issue.proposer)} />
-      {issue.voted && <Row label="Tu boleta" value="Emitida" color={colors.ok} />}
+      <Row label="Propuesta por" value={issue.proposer === me ? "usted" : displayName(chainId, issue.proposer)} />
+      {issue.voted && <Row label="Su boleta" value="Emitida" color={colors.ok} />}
     </Card>
   );
 }

@@ -38,9 +38,9 @@ async function loadVoteContext(connection: Connection, deployment: Deployment, i
 }
 
 function blocker({ issue, weight }: VoteContext): string | null {
-  if (issue.voted) return "Ya votaste en esta cuestión.";
+  if (issue.voted) return "Ya votó en esta cuestión.";
   if (issue.phase !== Phase.Voting) return "La cuestión no está en período de votación.";
-  if (weight === 0n) return "No estabas habilitado cuando se creó la cuestión: no podés votarla.";
+  if (weight === 0n) return "Su cuenta no estaba habilitada cuando se creó la cuestión: no puede votarla.";
   return null;
 }
 
@@ -107,7 +107,7 @@ export function CastBallotScreen({ chain, issueId, onDone }: { chain: Chain; iss
       setStep(`Enviada (${short(tx.hash)}). Esperando confirmación…`);
       await tx.wait();
       setStep(null);
-      Alert.alert("Voto registrado", `Tu boleta en la cuestión #${issueId} quedó registrada.`, [
+      Alert.alert("Voto registrado", `Su boleta en la cuestión #${issueId} quedó registrada.`, [
         { text: "OK", onPress: onDone },
       ]);
     } catch (err) {
@@ -132,20 +132,20 @@ export function CastBallotScreen({ chain, issueId, onDone }: { chain: Chain; iss
           )}
           {ctx.delegate !== ZeroAddress && (
             <Text style={[styles.p, { color: colors.warn }]}>
-              Cuando se creó esta cuestión tenías tu voto delegado en {displayName(chainId, ctx.delegate)}. Si
-              votás, tu boleta reemplaza a la de tu delegado para vos en esta cuestión.
+              Cuando se creó esta cuestión, su voto estaba delegado en {displayName(chainId, ctx.delegate)}. Si
+              vota, su boleta reemplaza a la de su delegado en esta cuestión.
             </Text>
           )}
           {ctx.delegators > 0 && (
             <Text style={styles.p}>
-              {ctx.delegators === 1 ? "Un miembro te delegó" : `${ctx.delegators} miembros te delegaron`} su voto: tu
-              boleta también suma su peso, salvo para quien vote directamente.
+              {ctx.delegators === 1 ? "Un miembro le delegó" : `${ctx.delegators} miembros le delegaron`} su voto: su
+              boleta también suma ese peso, salvo el de quien vote directamente.
             </Text>
           )}
 
-          <Card title="Tu orden de preferencia">
+          <Card title="Su orden de preferencia">
             {ranking.length === 0 ? (
-              <Text style={styles.p}>Tocá las opciones de abajo empezando por la que más preferís.</Text>
+              <Text style={styles.p}>Toque las opciones de abajo, empezando por la que prefiere.</Text>
             ) : (
               ranking.map((id, i) => {
                 const auto = !picked.includes(id);
@@ -172,7 +172,7 @@ export function CastBallotScreen({ chain, issueId, onDone }: { chain: Chain; iss
           </Card>
 
           {!complete && (
-            <Card title={ranking.length === 0 ? "Opciones" : "Elegí la siguiente"}>
+            <Card title={ranking.length === 0 ? "Opciones" : "Elija la siguiente"}>
               {left.map((id) => (
                 <Option
                   key={String(id)}

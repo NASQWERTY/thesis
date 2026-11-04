@@ -177,7 +177,7 @@ pueden ir cortados.
 con 6 de 8 expresados: **Adjudicada a Electricidad Serrana**.
 
 **5. Pagar** — **Ejecutar pago**. Mostrar «Adjudicada y pagada» (0,0025 ETH pagados, 0,0005 ETH
-devueltos a la tesorería), el saldo del proveedor en el portal («Pagada a tu cuenta») y la
+devueltos a la tesorería), el saldo del proveedor en el portal («Pagada a su cuenta») y la
 tesorería en Mi cuenta.
 
 **6. El rastro** — terminal:

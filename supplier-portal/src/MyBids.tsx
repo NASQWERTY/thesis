@@ -9,7 +9,7 @@ export interface MyBid {
 }
 
 export function MyBids({ bids, gateway }: { bids: MyBid[]; gateway: string | null }) {
-  if (bids.length === 0) return <p className="muted">Todavía no presentaste ofertas.</p>;
+  if (bids.length === 0) return <p className="muted">Todavía no presentó ofertas.</p>;
   return (
     <table>
       <thead>

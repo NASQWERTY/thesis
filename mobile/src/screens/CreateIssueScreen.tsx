@@ -19,10 +19,10 @@ interface Status {
 
 /** Why the member cannot raise an issue now, or null. The contract checks the same (HU-003). */
 function blocker(s: Status): string | null {
-  if (s.isSupplier) return "Tu cuenta está registrada como proveedor: no puede plantear cuestiones.";
-  if (!s.registered) return "Tu cuenta no está en el padrón.";
-  if (!s.eligible) return "Tu cuenta está deshabilitada (moroso): no podés plantear cuestiones.";
-  if (s.activeIssue !== 0n) return `Ya tenés abierta la cuestión #${s.activeIssue}. Podés plantear otra cuando se cierre.`;
+  if (s.isSupplier) return "Su cuenta está registrada como proveedor: no puede plantear cuestiones.";
+  if (!s.registered) return "Su cuenta no está en el padrón.";
+  if (!s.eligible) return "Su cuenta está deshabilitada (moroso): no puede plantear cuestiones.";
+  if (s.activeIssue !== 0n) return `Ya tiene abierta la cuestión #${s.activeIssue}. Podrá plantear otra cuando se cierre.`;
   if (s.available === 0n) return "La tesorería no tiene saldo libre.";
   return null;
 }
@@ -73,9 +73,9 @@ export function CreateIssueScreen({ chain, onDone }: { chain: Chain; onDone: () 
   const blocked = status ? blocker(status) : null;
 
   function validate(): string | null {
-    if (!title.trim()) return "Escribí un título.";
-    if (!body.trim()) return "Escribí una descripción.";
-    if (ceiling === null) return "Indicá el techo en ETH, p. ej. 0.5";
+    if (!title.trim()) return "Escriba un título.";
+    if (!body.trim()) return "Escriba una descripción.";
+    if (ceiling === null) return "Indique el techo en ETH, p. ej. 0.5";
     if (status && ceiling > status.available) {
       return `El techo supera el saldo libre de la tesorería (${formatEther(status.available)} ETH).`;
     }

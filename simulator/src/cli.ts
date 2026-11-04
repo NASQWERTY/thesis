@@ -160,7 +160,7 @@ async function suppliers(c: Connection, path?: string) {
 async function eligibility(c: Connection, memberArg?: string, value?: string) {
   checkRegistrar(c);
   const member = await resolveMember(memberArg);
-  if (value !== "si" && value !== "no") throw new UserError('Indicá "si" (habilitar) o "no" (deshabilitar)');
+  if (value !== "si" && value !== "no") throw new UserError('Indique "si" (habilitar) o "no" (deshabilitar)');
   const eligible = value === "si";
   await send(c, `${eligible ? "Habilitar" : "Deshabilitar"} a ${await label(member)}`, () =>
     c.gov.setEligibility(member, eligible),
@@ -226,7 +226,7 @@ async function fund(c: Connection, amount?: string) {
   try {
     value = parseEther(amount ?? "");
   } catch {
-    throw new UserError("Indicá el monto en ETH, p. ej. 1.5");
+    throw new UserError("Indique el monto en ETH, p. ej. 1.5");
   }
   await send(c, `Envío de ${amount} ETH a la tesorería`, () =>
     c.registrar.sendTransaction({ to: c.deployment.address, value }),
@@ -244,7 +244,7 @@ async function demoKeys(): Promise<(address: string) => string | undefined> {
   try {
     saved = JSON.parse(await readFile(accountsFile, "utf8"));
   } catch {
-    throw new UserError(`No existe ${shown(accountsFile)}. Generá las cuentas con \`accounts <n>\`.`);
+    throw new UserError(`No existe ${shown(accountsFile)}. Genere las cuentas con \`accounts <n>\`.`);
   }
   const byAddress = new Map(saved.map((a) => [getAddress(a.address), a.privateKey]));
   return (a) => byAddress.get(a);
@@ -295,7 +295,7 @@ async function writeKeysFile(keyOf: (address: string) => string | undefined) {
     ...(explorer && contract.startsWith("0x") ? [`Explorador: ${explorer}/address/${contract}`] : []),
     "",
     "Cómo usarlas:",
-    "- Miembros: en la app móvil, pegar la clave en «O pegá la clave privada» y tocar «Importar»",
+    "- Miembros: en la app móvil, pegar la clave en «O pegue la clave privada» y tocar «Importar»",
     "  (o «Escanear QR» con el código de `npm run sim -- qr`).",
     "- Proveedores: en MetaMask, «Importar cuenta» con la clave privada; después, en el portal de",
     "  proveedores, «Conectar MetaMask».",
@@ -311,7 +311,7 @@ async function writeKeysFile(keyOf: (address: string) => string | undefined) {
     lines.push(s.name, `  Dirección:     ${s.address}`, `  Clave privada: ${key(s.address)}`, "");
   }
   await writeFile(keysFile, lines.join("\n"));
-  console.log(`Cuentas de demo en ${shown(keysFile)} (no se versiona). Entregalo aparte del código.`);
+  console.log(`Cuentas de demo en ${shown(keysFile)} (no se versiona). Entréguelo aparte del código.`);
 }
 
 /**
@@ -364,7 +364,7 @@ cards.forEach((c) => {
 });
 </script></html>\n`;
     await writeFile(qrHtmlFile, page);
-    console.log(`Página con ${entries.length} QR en ${shown(qrHtmlFile)} (no se versiona). Abrila en el navegador.`);
+    console.log(`Página con ${entries.length} QR en ${shown(qrHtmlFile)} (no se versiona). Ábrala en el navegador.`);
     return;
   }
 
@@ -378,7 +378,7 @@ cards.forEach((c) => {
 async function accounts(countArg?: string) {
   if (network === "local") throw new UserError("En la red local se usan las cuentas de Hardhat; no hace falta generar.");
   const n = Number(countArg);
-  if (!Number.isInteger(n) || n <= 0) throw new UserError("Indicá cuántas cuentas generar, p. ej. accounts 11");
+  if (!Number.isInteger(n) || n <= 0) throw new UserError("Indique cuántas cuentas generar, p. ej. accounts 11");
   try {
     await readFile(accountsFile);
     throw new UserError(`${shown(accountsFile)} ya existe; no se sobrescribe.`);
@@ -390,7 +390,7 @@ async function accounts(countArg?: string) {
   const data = wallets.map((w) => ({ address: w.address, privateKey: w.privateKey }));
   await writeFile(accountsFile, JSON.stringify(data, null, 2) + "\n");
   console.log(`${n} cuentas guardadas en ${shown(accountsFile)} (no se versiona).`);
-  console.log("Copiá las direcciones a los CSV de data/sepolia/ y fondealas desde un faucet:");
+  console.log("Copie las direcciones a los CSV de data/sepolia/ y fondéelas desde un faucet:");
   for (const w of wallets) console.log(`  ${w.address}`);
 }
 
@@ -421,7 +421,7 @@ async function issue(c: Connection, memberArg?: string, ceilingArg?: string, des
   try {
     ceiling = parseEther(ceilingArg ?? "");
   } catch {
-    throw new UserError("Indicá el techo en ETH, p. ej. 2.5");
+    throw new UserError("Indique el techo en ETH, p. ej. 2.5");
   }
   const key = (await demoKeys())(member);
   if (!key) throw new UserError(`No hay clave local para ${member}`);
@@ -456,7 +456,7 @@ async function issue(c: Connection, memberArg?: string, ceilingArg?: string, des
 async function advanceTime(c: Connection, secondsArg?: string) {
   if (network !== "local") throw new UserError("Solo en la red local: el tiempo de la testnet no se puede adelantar.");
   const seconds = Number(secondsArg);
-  if (!Number.isInteger(seconds) || seconds <= 0) throw new UserError("Indicá los segundos, p. ej. time 300");
+  if (!Number.isInteger(seconds) || seconds <= 0) throw new UserError("Indique los segundos, p. ej. time 300");
   await c.provider.send("evm_increaseTime", [seconds]);
   await c.provider.send("evm_mine", []);
   const block = (await c.provider.getBlock("latest"))!;
@@ -491,7 +491,7 @@ async function gas(c: Connection, amount?: string) {
   try {
     target = parseEther(amount ?? "");
   } catch {
-    throw new UserError("Indicá el saldo objetivo en ETH, p. ej. gas 0.002");
+    throw new UserError("Indique el saldo objetivo en ETH, p. ej. gas 0.002");
   }
   const accounts = [
     ...(await readMembers(membersCsv())).map((m) => ({ address: m.address, label: `${m.unit} ${m.owner}` })),
@@ -526,7 +526,7 @@ async function execute(c: Connection, arg?: string) {
 }
 
 function issueNumber(arg: string | undefined, example: string): bigint {
-  if (!/^[0-9]+$/.test(arg ?? "")) throw new UserError(`Indicá el número de la cuestión, p. ej. ${example}`);
+  if (!/^[0-9]+$/.test(arg ?? "")) throw new UserError(`Indique el número de la cuestión, p. ej. ${example}`);
   return BigInt(arg!);
 }
 
@@ -566,7 +566,7 @@ async function main() {
     fund: (c) => fund(c, args[0]),
   };
   const run = commands[command];
-  if (!run) throw new UserError(`Comando desconocido: ${command}. Usá --help para ver los comandos.`);
+  if (!run) throw new UserError(`Comando desconocido: ${command}. Use --help para ver los comandos.`);
 
   const c = await connect(network);
   try {

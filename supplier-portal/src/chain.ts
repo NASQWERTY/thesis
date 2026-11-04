@@ -40,7 +40,7 @@ export async function connectWallet(
   { account, pickAccount }: { account?: string; pickAccount?: boolean } = {},
 ): Promise<Session> {
   const eth = window.ethereum;
-  if (!eth) throw new Error("No se encontró MetaMask. Instalá la extensión y recargá la página.");
+  if (!eth) throw new Error("No se encontró MetaMask. Instale la extensión y recargue la página.");
 
   if (pickAccount) await eth.request({ method: "wallet_requestPermissions", params: [{ eth_accounts: {} }] });
   await eth.request({ method: "eth_requestAccounts" });
@@ -78,9 +78,9 @@ export async function connectWallet(
 
 // Custom errors of CommunityGovernance → message for the supplier.
 const CONTRACT_ERRORS: Record<string, string> = {
-  NotSupplier: "Tu cuenta no está registrada como proveedor.",
+  NotSupplier: "Su cuenta no está registrada como proveedor.",
   NotInBiddingPhase: "La ventana de ofertas de esta cuestión ya cerró.",
-  AlreadyBid: "Ya presentaste una oferta para esta cuestión.",
+  AlreadyBid: "Ya presentó una oferta para esta cuestión.",
   ZeroAmount: "El monto debe ser mayor que 0.",
   AmountAboveCeiling: "El monto supera el techo de la cuestión.",
   EmptyCid: "Falta el documento de la propuesta.",
@@ -97,7 +97,7 @@ export function describeError(err: unknown, contractInterface?: Interface): stri
     message?: string;
     info?: { error?: { data?: string } };
   };
-  if (e.code === "ACTION_REJECTED" || e.code === 4001) return "Cancelaste la operación en MetaMask.";
+  if (e.code === "ACTION_REJECTED" || e.code === 4001) return "Se canceló la operación en MetaMask.";
   const data = e.data ?? e.info?.error?.data;
   let name = e.revert?.name;
   if (!name && typeof data === "string") {
@@ -108,9 +108,9 @@ export function describeError(err: unknown, contractInterface?: Interface): stri
     }
   }
   if (name) return CONTRACT_ERRORS[name] ?? `El contrato rechazó la operación (${name}).`;
-  if (e.code === "INSUFFICIENT_FUNDS") return "No tenés saldo suficiente para pagar el gas.";
+  if (e.code === "INSUFFICIENT_FUNDS") return "No tiene saldo suficiente para pagar el gas.";
   if (typeof e.message === "string" && e.message.includes("nonce")) {
-    return "MetaMask tiene un nonce desactualizado (¿reiniciaste el nodo local?). En MetaMask: Configuración → Avanzado → Borrar datos de actividad.";
+    return "MetaMask tiene un nonce desactualizado (¿se reinició el nodo local?). En MetaMask: Configuración → Avanzado → Borrar datos de actividad.";
   }
   return e.shortMessage ?? e.message ?? String(err);
 }
@@ -144,7 +144,7 @@ export async function uploadFile(file: File): Promise<string> {
   try {
     response = await fetch(`${UPLOADER_URL}/upload`, { method: "POST", body });
   } catch {
-    throw new Error(`No se pudo contactar al servicio de subida (${UPLOADER_URL}). ¿Está corriendo el uploader?`);
+    throw new Error("No se pudo contactar al servicio de subida de archivos. Intente de nuevo más tarde.");
   }
   const json = (await response.json()) as { cid?: string; error?: string };
   if (!response.ok || !json.cid) throw new Error(json.error ?? `Error al subir el archivo (HTTP ${response.status}).`);

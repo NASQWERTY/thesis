@@ -14,7 +14,7 @@ export function ScanKeyScreen({ onScanned, onCancel }: { onScanned: (data: strin
   if (!permission.granted) {
     return (
       <View style={[styles.screen, styles.content, { justifyContent: "center" }]}>
-        <Text style={styles.p}>La app necesita la cámara para leer el código QR de tu clave.</Text>
+        <Text style={styles.p}>La app necesita la cámara para leer el código QR de su clave.</Text>
         {permission.canAskAgain ? (
           <Button title="Permitir cámara" onPress={requestPermission} />
         ) : (
@@ -38,7 +38,7 @@ export function ScanKeyScreen({ onScanned, onCancel }: { onScanned: (data: strin
         }}
       />
       <View style={scan.overlay}>
-        <Text style={scan.hint}>Apuntá al código QR de tu clave</Text>
+        <Text style={scan.hint}>Apunte al código QR de su clave</Text>
         <View style={scan.frame} />
         <Button title="Cancelar" kind="secondary" onPress={onCancel} />
       </View>

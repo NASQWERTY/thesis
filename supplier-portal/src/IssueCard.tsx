@@ -91,7 +91,7 @@ export function IssueCard({
       </dl>
 
       {issue.myBid ? (
-        <p className="ok">Ya presentaste tu oferta para esta cuestión.</p>
+        <p className="ok">Ya presentó su oferta para esta cuestión.</p>
       ) : !canBid ? null : open ? (
         <BidForm
           issue={issue}
@@ -136,11 +136,11 @@ function BidForm({
     try {
       wei = parseEther(amount.replace(",", "."));
     } catch {
-      return setError("Ingresá un monto válido en ETH, por ejemplo 1.5");
+      return setError("Ingrese un monto válido en ETH, por ejemplo 1.5");
     }
     if (wei <= 0n) return setError("El monto debe ser mayor que 0.");
     if (wei > issue.ceiling) return setError(`El monto supera el techo de ${formatEther(issue.ceiling)} ETH.`);
-    if (!file) return setError("Adjuntá el documento de la propuesta.");
+    if (!file) return setError("Adjunte el documento de la propuesta.");
 
     setBusy(true);
     try {
@@ -150,7 +150,7 @@ function BidForm({
       await session.gov.submitBid.estimateGas(issue.id, wei, "pendiente");
       setStatus("Subiendo el documento a IPFS…");
       const cid = await uploadFile(file);
-      setStatus("Confirmá la transacción en MetaMask…");
+      setStatus("Confirme la transacción en MetaMask…");
       const tx = await session.gov.submitBid(issue.id, wei, cid, await feeOverrides(session));
       setStatus("Esperando confirmación de la red…");
       const receipt = await tx.wait();

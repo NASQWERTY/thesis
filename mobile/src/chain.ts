@@ -13,24 +13,24 @@ export type Connection = ReturnType<typeof connect>;
 
 // Custom errors of CommunityGovernance → message for the member.
 const CONTRACT_ERRORS: Record<string, string> = {
-  NotRegistered: "Tu cuenta no está en el padrón.",
+  NotRegistered: "Su cuenta no está en el padrón.",
   AddressIsSupplier: "La cuenta está registrada como proveedor.",
-  NotEligible: "Tu cuenta está deshabilitada (moroso).",
-  ActiveIssueExists: "Ya tenés una cuestión abierta. Podés plantear otra cuando se cierre.",
+  NotEligible: "Su cuenta está deshabilitada (moroso).",
+  ActiveIssueExists: "Ya tiene una cuestión abierta. Podrá plantear otra cuando se cierre.",
   InsufficientFunds: "El techo supera el saldo libre de la tesorería.",
   ZeroCeiling: "El techo tiene que ser mayor a cero.",
   EmptyCid: "Falta la descripción en IPFS.",
   NotInVotingPhase: "La cuestión no está en período de votación.",
-  NotEligibleAtSnapshot: "No estabas habilitado cuando se creó la cuestión: no podés votarla.",
-  AlreadyVoted: "Ya votaste en esta cuestión. La boleta no se puede cambiar.",
+  NotEligibleAtSnapshot: "Su cuenta no estaba habilitada cuando se creó la cuestión: no puede votarla.",
+  AlreadyVoted: "Ya votó en esta cuestión. La boleta no se puede cambiar.",
   InvalidRanking: "La boleta tiene que ordenar todas las ofertas y «Rechazar todas», sin repetir.",
   IssueNotFound: "La cuestión no existe.",
-  SelfDelegation: "No podés delegarte el voto a vos mismo.",
-  AlreadyDelegating: "Ya delegaste tu voto. Revocá la delegación antes de elegir otro delegado.",
-  DelegatorIsDelegate: "Te delegaron el voto: no podés delegar mientras seas delegado.",
+  SelfDelegation: "No puede delegar el voto en su propia cuenta.",
+  AlreadyDelegating: "Ya delegó su voto. Revoque la delegación antes de elegir otro delegado.",
+  DelegatorIsDelegate: "Otros miembros le delegaron el voto: no puede delegar mientras sea delegado.",
   DelegateIsDelegating: "Ese miembro delegó su voto: no puede recibir delegaciones.",
   DelegationCapExceeded: "Superaría el tope: nadie puede controlar más de un tercio del peso total.",
-  NotDelegating: "No tenés una delegación para revocar.",
+  NotDelegating: "No tiene una delegación para revocar.",
   IssueNotOpen: "La cuestión ya está cerrada.",
   VotingNotOver: "La votación todavía no terminó.",
   NotAwarded: "La cuestión no está adjudicada.",
@@ -43,7 +43,7 @@ export function describeError(err: unknown, contractInterface: Interface): strin
   const e = err as { revert?: { name: string } | null; data?: string; code?: string; shortMessage?: string };
   const name = e.revert?.name ?? (e.data ? contractInterface.parseError(e.data)?.name : undefined);
   if (name) return CONTRACT_ERRORS[name] ?? `El contrato rechazó la operación (${name}).`;
-  if (e.code === "INSUFFICIENT_FUNDS") return "No tenés saldo suficiente para pagar la operación.";
+  if (e.code === "INSUFFICIENT_FUNDS") return "No tiene saldo suficiente para pagar la operación.";
   if (e.code === "NETWORK_ERROR" || e.code === "TIMEOUT") return "No se pudo conectar con la red.";
   return e.shortMessage ?? String(err);
 }
@@ -54,8 +54,8 @@ export const notAvailable = (network: Network) => `La red ${network.label} todav
 /** The RPC did not answer. The local chain is only used for demos on the same WiFi as the PC. */
 export function connectionError(network: Network): string {
   return network.id === "local"
-    ? "No se pudo conectar con la red local. Verificá que el celular esté en la misma WiFi que la computadora de la demo."
-    : `No se pudo conectar con ${network.label}. Revisá tu conexión a internet e intentá de nuevo.`;
+    ? "No se pudo conectar con la red local. Verifique que el celular esté en la misma red WiFi que la computadora de la demo."
+    : `No se pudo conectar con ${network.label}. Revise su conexión a internet e intente de nuevo.`;
 }
 
-export const short =(address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;
+export const short = (address: string) => `${address.slice(0, 6)}…${address.slice(-4)}`;

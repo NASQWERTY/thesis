@@ -114,7 +114,7 @@ export function IssueDetailScreen({
               />
             )}
             <Row label="Techo" value={`${formatEther(issue.ceiling)} ETH`} />
-            <Row label="Propuesta por" value={issue.proposer === me ? "vos" : displayName(chainId, issue.proposer)} />
+            <Row label="Propuesta por" value={issue.proposer === me ? "usted" : displayName(chainId, issue.proposer)} />
             <Row label="Fin de ofertas" value={formatTime(issue.biddingEnd)} />
             <Row label="Fin de votación" value={formatTime(issue.votingEnd)} />
           </Card>
@@ -153,7 +153,7 @@ export function IssueDetailScreen({
             ))}
           </Card>
 
-          <Card title="Tu voto">
+          <Card title="Su voto">
             <Ballot issue={issue} onVote={onVote} />
           </Card>
         </>
@@ -243,7 +243,7 @@ function Ballot({ issue, onVote }: { issue: IssueInfo; onVote: () => void }) {
   if (issue.voted) {
     return (
       <>
-        <Text style={styles.p}>Tu orden de preferencia:</Text>
+        <Text style={styles.p}>Su orden de preferencia:</Text>
         {issue.ranking.map((id, i) => (
           <Text key={String(id)} style={[styles.value, { textAlign: "left" }]}>
             {i + 1}. {id === REJECT_ALL ? "Rechazar todas" : `Oferta #${id}`}
@@ -258,6 +258,6 @@ function Ballot({ issue, onVote }: { issue: IssueInfo; onVote: () => void }) {
     case Phase.Voting:
       return <Button title="Votar" onPress={onVote} />;
     default:
-      return <Text style={styles.p}>No votaste en esta cuestión.</Text>;
+      return <Text style={styles.p}>No votó en esta cuestión.</Text>;
   }
 }

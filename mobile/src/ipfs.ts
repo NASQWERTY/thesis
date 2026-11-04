@@ -32,7 +32,7 @@ export async function uploadText(fileName: string, text: string): Promise<string
       body,
     });
   } catch {
-    throw new Error("No se pudo contactar al servicio de subida de archivos. Intentá de nuevo más tarde.");
+    throw new Error("No se pudo contactar al servicio de subida de archivos. Intente de nuevo más tarde.");
   }
   const json = (await response.json().catch(() => ({}))) as { cid?: string; error?: string };
   if (!response.ok || !json.cid) throw new Error(`El servicio de subida rechazó el archivo: ${json.error ?? response.status}`);

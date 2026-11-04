@@ -74,9 +74,9 @@ async function loadDelegation(connection: Connection): Promise<DelegationState> 
 }
 
 function blocker({ me, isSupplier }: DelegationState): string | null {
-  if (isSupplier) return "Tu cuenta está registrada como proveedor.";
-  if (!me.registered) return "Tu cuenta no está en el padrón.";
-  if (!me.eligible) return "Tu cuenta está deshabilitada (moroso): no podés delegar.";
+  if (isSupplier) return "Su cuenta está registrada como proveedor.";
+  if (!me.registered) return "Su cuenta no está en el padrón.";
+  if (!me.eligible) return "Su cuenta está deshabilitada (moroso): no puede delegar.";
   return null;
 }
 
@@ -110,7 +110,7 @@ export function DelegationScreen({ chain }: { chain: Chain }) {
   function delegate(to: string) {
     Alert.alert(
       "Delegar voto",
-      `Vas a delegar tu voto en ${name(to)}.\n\nVale para las cuestiones que se planteen a partir de ahora. En cada una podés votar vos directamente, y tu boleta reemplaza a la de tu delegado.`,
+      `Va a delegar su voto en ${name(to)}.\n\nVale para las cuestiones que se planteen a partir de ahora. En cada una puede votar directamente, y su boleta reemplaza a la de su delegado.`,
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Delegar", onPress: () => send(() => chain.connection!.gov.delegateTo(to), "Delegación registrada.") },
@@ -121,7 +121,7 @@ export function DelegationScreen({ chain }: { chain: Chain }) {
   function revoke() {
     Alert.alert(
       "Revocar delegación",
-      "Recuperás tu voto para las cuestiones que se planteen a partir de ahora. Las ya creadas no cambian.",
+      "Recupera su voto para las cuestiones que se planteen a partir de ahora. Las ya creadas no cambian.",
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -153,7 +153,7 @@ export function DelegationScreen({ chain }: { chain: Chain }) {
 
       {state && !blocked && (
         <>
-          <Card title="Tu voto">
+          <Card title="Su voto">
             {state.me.delegate !== ZeroAddress ? (
               <>
                 <Row label="Delegado en" value={name(state.me.delegate)} />
@@ -161,22 +161,22 @@ export function DelegationScreen({ chain }: { chain: Chain }) {
               </>
             ) : state.delegators.length > 0 ? (
               <>
-                <Row label="Te delegaron" value={`${state.delegators.length} miembro(s)`} />
+                <Row label="Le delegaron" value={`${state.delegators.length} miembro(s)`} />
                 <Row label="Peso recibido" value={String(state.me.receivedWeight)} />
                 {state.delegators.map((d) => (
                   <Text key={d.address} style={styles.p}>
                     • {name(d.address)}
                   </Text>
                 ))}
-                <Text style={styles.p}>Mientras te deleguen el voto no podés delegar el tuyo.</Text>
+                <Text style={styles.p}>Mientras le deleguen el voto no puede delegar el suyo.</Text>
               </>
             ) : (
-              <Row label="Estado" value="Votás vos" />
+              <Row label="Estado" value="Vota directamente" />
             )}
           </Card>
 
           {state.me.delegate === ZeroAddress && state.delegators.length === 0 && (
-            <Card title="Elegí un delegado">
+            <Card title="Elija un delegado">
               {state.candidates.map(({ member, reason }) => (
                 <Pressable
                   key={member.address}
@@ -194,7 +194,7 @@ export function DelegationScreen({ chain }: { chain: Chain }) {
                   {reason && <Text style={styles.label}>{reason}</Text>}
                   {!reason && !member.eligible && (
                     <Text style={[styles.label, { color: colors.warn }]}>
-                      Deshabilitado (moroso): mientras lo esté, tu voto delegado no cuenta.
+                      Deshabilitado (moroso): mientras lo esté, su voto delegado no cuenta.
                     </Text>
                   )}
                 </Pressable>

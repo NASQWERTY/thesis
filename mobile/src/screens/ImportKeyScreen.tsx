@@ -54,10 +54,10 @@ export function ImportKeyScreen({ onImported }: { onImported: (privateKey: strin
     <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
       <Text style={styles.h1}>Gobernanza comunitaria</Text>
       <Text style={styles.p}>
-        Importá la clave privada de tu cuenta de miembro. Se guarda cifrada en este dispositivo.
+        Importe la clave privada de su cuenta de miembro. Se guarda cifrada en este dispositivo.
       </Text>
       <Card title="Código QR">
-        <Text style={styles.p}>Escaneá el código QR que te entregó el registrador.</Text>
+        <Text style={styles.p}>Escanee el código QR que le entregó el registrador.</Text>
         <Button
           title="Escanear QR"
           onPress={() => {
@@ -67,7 +67,7 @@ export function ImportKeyScreen({ onImported }: { onImported: (privateKey: strin
           busy={busy}
         />
       </Card>
-      <Card title="O pegá la clave privada">
+      <Card title="O pegue la clave privada">
         <TextInput
           style={styles.input}
           value={input}
@@ -84,7 +84,7 @@ export function ImportKeyScreen({ onImported }: { onImported: (privateKey: strin
       </Card>
       {error && <Text style={styles.error}>{error}</Text>}
       <Text style={styles.p}>
-        Prototipo en red de prueba: usá solo las cuentas de demo que te entregó el registrador, nunca una clave
+        Prototipo en red de prueba: use solo las cuentas de demo que le entregó el registrador, nunca una clave
         con fondos reales.
       </Text>
     </ScrollView>

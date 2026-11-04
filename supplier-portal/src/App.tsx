@@ -125,7 +125,7 @@ export default function App() {
       setMyBids(mine.reverse());
       setError(null);
     } catch {
-      setError(`No se pudo leer el contrato en ${network.rpcUrl}. ¿Está corriendo el nodo?`);
+      setError(`No se pudo conectar con ${network.label}. Revise su conexión e intente de nuevo.`);
     } finally {
       setLoading(false);
     }
@@ -173,14 +173,14 @@ export default function App() {
       </header>
 
       {!deployment && (
-        <p className="error">No hay un contrato desplegado en ninguna red. Corré el deploy en contracts/ y reiniciá el portal.</p>
+        <p className="error">El portal todavía no está disponible en ninguna red.</p>
       )}
       {error && <p className="error">{error}</p>}
 
       {!session ? (
         <section className="intro">
           <p>
-            Conectá tu billetera MetaMask con la cuenta de proveedor que te dio de alta el registrador para ver las
+            Conecte su billetera MetaMask con la cuenta de proveedor que le dio de alta el registrador para ver las
             cuestiones abiertas y presentar ofertas.
           </p>
         </section>
@@ -188,8 +188,8 @@ export default function App() {
         <>
           {!isSupplier && (
             <p className="warning">
-              La cuenta {short(session.account)} no está registrada como proveedor: podés ver las cuestiones, pero no
-              ofertar. Pedile al registrador que te dé de alta.
+              La cuenta {short(session.account)} no está registrada como proveedor: puede ver las cuestiones, pero no
+              ofertar. Solicite el alta al registrador.
             </p>
           )}
 
@@ -238,7 +238,7 @@ export default function App() {
 function phaseLabel(phase: bigint, issue: { status: bigint; winningBidId: bigint }, bidId: bigint): string {
   if (phase < 3n) return PHASE_LABELS[Number(phase)];
   const mine = issue.winningBidId === bidId;
-  if (issue.status === 1n) return mine ? "Adjudicada a tu oferta" : "Adjudicada a otra oferta";
-  if (issue.status === 2n) return mine ? "Pagada a tu cuenta" : "Pagada a otro proveedor";
+  if (issue.status === 1n) return mine ? "Adjudicada a su oferta" : "Adjudicada a otra oferta";
+  if (issue.status === 2n) return mine ? "Pagada a su cuenta" : "Pagada a otro proveedor";
   return "Cerrada sin adjudicar";
 }

@@ -95,7 +95,7 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
   }
 
   function logout() {
-    Alert.alert("Cerrar sesión", "Se borra la clave de este dispositivo. Vas a tener que importarla de nuevo.", [
+    Alert.alert("Cerrar sesión", "Se borra la clave de este dispositivo. Tendrá que importarla de nuevo.", [
       { text: "Cancelar", style: "cancel" },
       {
         text: "Borrar clave",
@@ -190,7 +190,7 @@ export function HomeScreen({ chain, onLogout }: { chain: Chain; onLogout: () => 
 
 function MemberStatus({ data, chainId }: { data: Snapshot; chainId: number }) {
   if (data.isSupplier) return <Row label="Rol" value="Proveedor" />;
-  if (!data.registered) return <Row label="Estado" value="No estás en el padrón" color={colors.warn} />;
+  if (!data.registered) return <Row label="Estado" value="No está en el padrón" color={colors.warn} />;
   return (
     <>
       <Row
@@ -199,7 +199,7 @@ function MemberStatus({ data, chainId }: { data: Snapshot; chainId: number }) {
         color={data.eligible ? colors.ok : colors.error}
       />
       <Row label="Peso de voto" value={String(data.weight)} />
-      <Row label="Delegaste en" value={data.delegate === ZeroAddress ? "—" : displayName(chainId, data.delegate)} />
+      <Row label="Delegó en" value={data.delegate === ZeroAddress ? "—" : displayName(chainId, data.delegate)} />
       <Row label="Peso recibido" value={String(data.receivedWeight)} />
     </>
   );

@@ -43,7 +43,7 @@ const NETWORKS = {
     chainId: 421614,
     rpcUrl: () => requiredEnv("ARBITRUM_SEPOLIA_RPC_URL"),
     registrarKey: () => requiredEnv("DEPLOYER_PRIVATE_KEY"),
-    hint: "revisá ARBITRUM_SEPOLIA_RPC_URL en el .env",
+    hint: "revise ARBITRUM_SEPOLIA_RPC_URL en el .env",
   },
 } as const;
 
@@ -59,7 +59,7 @@ export async function connect(network: NetworkName) {
     const file = new URL(`../../shared/deployments/${cfg.chainId}.json`, import.meta.url);
     deployment = JSON.parse(await readFile(file, "utf8"));
   } catch {
-    throw new UserError(`No hay un deploy para la red ${network}. Corré el deploy en contracts/ primero.`);
+    throw new UserError(`No hay un deploy para la red ${network}. Ejecute primero el deploy en contracts/.`);
   }
 
   // cacheTimeout -1: ethers caches identical requests for 250 ms by default, which hands a stale
@@ -75,7 +75,7 @@ export async function connect(network: NetworkName) {
   if (code === "0x") {
     provider.destroy();
     throw new UserError(
-      `No hay contrato en ${deployment.address}. Si reiniciaste el nodo local, volvé a correr \`npm run deploy:local\`.`,
+      `No hay contrato en ${deployment.address}. Si se reinició el nodo local, vuelva a ejecutar \`npm run deploy:local\`.`,
     );
   }
 
