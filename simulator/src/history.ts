@@ -82,4 +82,28 @@ export async function history(
         `${title.padEnd(32)}${detail}  ${short(log.transactionHash)}`,
     );
   }
+  if (issueFilter !== undefined) await documents(c, issueFilter, names);
+}
+
+/**
+ * The events carry no CIDs: they are read from the contract's storage. Each one links to the
+ * file on IPFS, through the Pinata gateway when the .env has one (any public gateway works too).
+ */
+async function documents(c: Connection, issueId: bigint, names: Names) {
+  const issue = await c.gov.issues(issueId);
+  if (issue.createdAt === 0n) return;
+  const [bidIds, bids] = await c.gov.getBids(issueId);
+  const gateway = process.env.PINATA_GATEWAY || "ipfs.io";
+  const docs: [string, string][] = [
+    ["Descripción de la cuestión", issue.descriptionCid],
+    ...(bidIds as bigint[]).map((id, i): [string, string] => [
+      `Oferta #${id} · ${names.supplier(bids[i].supplier)}`,
+      bids[i].documentCid,
+    ]),
+  ];
+  console.log(`\nDocumentos en IPFS (el contrato guarda solo el CID)\n`);
+  for (const [label, cid] of docs) {
+    console.log(`  ${label}\n    CID ${cid}\n    https://${gateway}/ipfs/${cid}`);
+  }
+  console.log(`\n  El mismo CID sirve en cualquier gateway IPFS público: https://<gateway>/ipfs/<CID>`);
 }

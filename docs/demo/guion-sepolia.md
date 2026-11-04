@@ -185,7 +185,7 @@ tesorería en Mi cuenta.
 ```sh
 cd simulator
 npm run sim -- history --network sepolia            # las cinco cuestiones, en orden
-npm run sim -- history --network sepolia --issue 5  # la vida completa de la grabada
+npm run sim -- history --network sepolia --issue 5  # la vida completa de la grabada, con los CID de IPFS
 ```
 
 Mostrar que las cuestiones 1 a 4 quedaron resueltas con su motivo (delegación, «Rechazar todas»,
