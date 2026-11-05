@@ -1,25 +1,27 @@
 # Prototype architecture
 
-From thesis Figura 11 (`figures/fig10-11-supplier-portal-architecture.png`).
+Thesis Figura 11, updated 2026-11-04 with the upload service: `docs/diagramas/fig11-architecture.svg`
+(and `.png`). The original figure is `figures/fig10-11-supplier-portal-architecture.png`.
 
 ```
  Registrador            Miembro                 Proveedor
  (wallet)               (wallet)                (wallet)
     │                      │                       │
     ▼                      ▼                       ▼
- Simulador de          Aplicación móvil        Servicio web de proveedores ──► Pinata (IPFS)
- empadronamiento       plantear, delegar,      consultar cuestiones,             ▲
- y alta de proveedores votar, cerrar,          ofertar                           │
- Node.js · ethers.js   ejecutar                React · Node.js · ethers.js       │
-    │                  React Native·ethers.js        │                           │
-    │                      │  └─ subir archivos ──────┼───────────────────────────┘
+ Simulador de          Aplicación móvil        Servicio web de       ──► Uploader (Node.js) ──► Pinata (IPFS)
+ empadronamiento       plantear, delegar,      proveedores               holds the Pinata JWT     │
+ y alta de proveedores votar, cerrar,          consultar, ofertar        POST /upload → CID       │
+ historial             ejecutar                React · ethers.js ·           ▲                    │
+ Node.js · ethers.js   React Native·ethers.js  MetaMask                      │                    │
+    │                      │  └─ subir archivos ──────┼───────────────────────┘                    │
+    │                      │  ◄── leer por gateway ───┼◄───────────────────────────────────────────┘
     ▼                      ▼                          ▼
  ┌──────────────── Arbitrum Sepolia (JSON-RPC) ────────────────┐
  │  CommunityGovernance.sol                                     │
  │  padrón · proveedores · cuestiones y reservas ·              │──► transfer (test ETH)
  │  delegaciones · boletas y escrutinio · tesorería             │     to awarded supplier
  └──────────────────────────────────────────────────────────────┘
-        ▲
+        ▲                       (only the CID of each file goes on-chain)
  Dev environment: Hardhat (compile, test, deploy)
 ```
 
@@ -29,12 +31,13 @@ From thesis Figura 11 (`figures/fig10-11-supplier-portal-architecture.png`).
 |---|---|---|---|
 | Smart contract | `contracts/` | Solidity ^0.8.24, Hardhat, OpenZeppelin 5.x, TypeScript tests | All rules in `spec.md` |
 | Enrollment simulator | `simulator/` | Node.js (TS or JS), ethers v6, CLI | Registrar loads members (unit, owner, address, weight) and suppliers (name, address) from CSV/JSON; enable/disable; set weight; keeps the off-chain data (unit ↔ address, supplier names). Also: fund the treasury from the registrar account for the demo |
-| Supplier portal | `supplier-portal/` | React + Vite, ethers v6, MetaMask; tiny Node/Express endpoint (`/api/pin`) for Pinata | List open issues in bidding phase, show issue description from IPFS, submit bid with attachment |
+| Supplier portal | `supplier-portal/` | React + Vite, ethers v6, MetaMask | List open issues in bidding phase, show issue description from IPFS, submit bid with attachment (uploaded through the uploader) |
+| Upload service | `uploader/` | Node.js 24, no dependencies | Holds the Pinata JWT; `POST /upload` pins a file on IPFS and returns its CID; `GET /config` tells clients the gateway to read from |
 | Member app | `mobile/` | React Native (Expo — OPEN-7), ethers v6 | Issues list (Fig. 6), create issue with ceiling + attachment (Fig. 7), ranked vote (Fig. 8), delegation/revocation (Fig. 9), close & execute buttons, treasury balance |
 | Shared | `shared/` (optional) | — | ABI + deployed address JSON exported by the deploy script, consumed by the three clients |
 
-Both clients upload to Pinata **through a server-side endpoint**; the Pinata JWT never ships
-inside the app bundle. The member app can call the same endpoint the supplier portal exposes.
+Both clients upload to Pinata **through the uploader**, a separate Node.js service on the same PC;
+the Pinata JWT never reaches a browser or a phone. Reads go straight to the IPFS gateway.
 
 ## Target repo layout
 

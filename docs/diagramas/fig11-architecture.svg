@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="735" viewBox="0 0 1170 735" font-family="DejaVu Sans, Arial, sans-serif">
+  <!-- Figura 11, Arquitectura del prototipo. Hand-written SVG, labels in Spanish. The PNG is a
+       headless Chrome screenshot at 1170x735 with device scale factor 2. -->
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#3a3f47"/>
+    </marker>
+    <style>
+      .box { fill: #eef3f9; stroke: #6b8bb5; stroke-width: 1.2; }
+      .module { fill: #f4f7fb; stroke: #9db3cf; stroke-width: 1; }
+      .net { fill: #f7f9fc; stroke: #6b8bb5; stroke-width: 1.4; }
+      .inner { fill: #ffffff; stroke: #6b8bb5; stroke-width: 1.2; }
+      .store { fill: #fdf6e9; stroke: #e0c085; stroke-width: 1.2; }
+      .dev { fill: #f4f5f7; stroke: #8a929c; stroke-width: 1.2; stroke-dasharray: 5 4; }
+      .new { fill: #eef3f9; stroke: #2e6da4; stroke-width: 2; }
+      .title { font-size: 13px; font-weight: 700; fill: #1f3556; }
+      .sub { font-size: 11px; fill: #5a6573; }
+      .tech { font-size: 11px; fill: #6b7684; }
+      .mod { font-size: 12px; font-weight: 700; fill: #2a3442; }
+      .label { font-size: 11px; fill: #3a3f47; }
+      .line { stroke: #3a3f47; stroke-width: 1.2; fill: none; }
+      .dashed { stroke: #3a3f47; stroke-width: 1.2; fill: none; stroke-dasharray: 5 4; }
+    </style>
+  </defs>
+  <rect width="1170" height="735" fill="#ffffff"/>
+
+  <!-- Actors -->
+  <rect class="box" x="40" y="20" width="200" height="50" rx="4"/>
+  <text class="title" x="140" y="41" text-anchor="middle">Registrador</text>
+  <text class="sub" x="140" y="58" text-anchor="middle">firma con su billetera</text>
+
+  <rect class="box" x="330" y="20" width="200" height="50" rx="4"/>
+  <text class="title" x="430" y="41" text-anchor="middle">Miembro</text>
+  <text class="sub" x="430" y="58" text-anchor="middle">firma con su billetera</text>
+
+  <rect class="box" x="620" y="20" width="200" height="50" rx="4"/>
+  <text class="title" x="720" y="41" text-anchor="middle">Proveedor</text>
+  <text class="sub" x="720" y="58" text-anchor="middle">firma con su billetera</text>
+
+  <line class="line" x1="140" y1="70" x2="140" y2="108" marker-end="url(#arrow)"/>
+  <line class="line" x1="430" y1="70" x2="430" y2="108" marker-end="url(#arrow)"/>
+  <line class="line" x1="720" y1="70" x2="720" y2="108" marker-end="url(#arrow)"/>
+
+  <!-- Clients -->
+  <rect class="box" x="20" y="110" width="240" height="90" rx="4"/>
+  <text class="title" x="140" y="136" text-anchor="middle">Simulador de empadronamiento</text>
+  <text class="sub" x="140" y="154" text-anchor="middle">y alta de proveedores; historial</text>
+  <text class="tech" x="140" y="183" text-anchor="middle">Node.js · ethers.js</text>
+
+  <rect class="box" x="310" y="110" width="240" height="90" rx="4"/>
+  <text class="title" x="430" y="136" text-anchor="middle">Aplicación móvil</text>
+  <text class="sub" x="430" y="154" text-anchor="middle">plantear, delegar, votar, cerrar</text>
+  <text class="tech" x="430" y="183" text-anchor="middle">React Native · ethers.js</text>
+
+  <rect class="box" x="600" y="110" width="240" height="90" rx="4"/>
+  <text class="title" x="720" y="136" text-anchor="middle">Servicio web de proveedores</text>
+  <text class="sub" x="720" y="154" text-anchor="middle">consultar cuestiones y ofertar</text>
+  <text class="tech" x="720" y="183" text-anchor="middle">React · ethers.js · MetaMask</text>
+
+  <!-- Upload service (new) -->
+  <rect class="new" x="900" y="110" width="250" height="90" rx="4"/>
+  <text class="title" x="1025" y="136" text-anchor="middle">Servicio de subida (uploader)</text>
+  <text class="sub" x="1025" y="154" text-anchor="middle">guarda la clave de Pinata</text>
+  <text class="tech" x="1025" y="183" text-anchor="middle">Node.js</text>
+
+  <!-- Off-chain storage -->
+  <rect class="store" x="900" y="270" width="250" height="230" rx="4"/>
+  <text class="title" x="1025" y="298" text-anchor="middle">Almacenamiento</text>
+  <text class="title" x="1025" y="315" text-anchor="middle">fuera de la cadena</text>
+  <text class="sub" x="1025" y="336" text-anchor="middle" font-weight="700">IPFS vía Pinata</text>
+  <text class="mod" x="1025" y="380" text-anchor="middle">Descripciones de las cuestiones</text>
+  <text class="mod" x="1025" y="400" text-anchor="middle">Propuestas de las ofertas</text>
+  <text class="sub" x="1025" y="436" text-anchor="middle">Direccionado por contenido:</text>
+  <text class="sub" x="1025" y="452" text-anchor="middle">en la cadena queda solo</text>
+  <text class="sub" x="1025" y="468" text-anchor="middle">el identificador (CID)</text>
+
+  <!-- Arbitrum Sepolia / contract -->
+  <rect class="net" x="20" y="340" width="830" height="260" rx="4"/>
+  <text class="title" x="435" y="362" text-anchor="middle" fill="#2e6da4">Red de prueba Arbitrum Sepolia</text>
+  <text class="sub" x="840" y="362" text-anchor="end">acceso por JSON-RPC</text>
+  <rect class="inner" x="40" y="375" width="790" height="210" rx="4"/>
+  <text class="title" x="435" y="398" text-anchor="middle">Contrato inteligente CommunityGovernance (Solidity)</text>
+
+  <rect class="module" x="55" y="415" width="240" height="60" rx="3"/>
+  <text class="mod" x="175" y="450" text-anchor="middle">Padrón de miembros</text>
+  <rect class="module" x="315" y="415" width="240" height="60" rx="3"/>
+  <text class="mod" x="435" y="450" text-anchor="middle">Registro de proveedores</text>
+  <rect class="module" x="575" y="415" width="240" height="60" rx="3"/>
+  <text class="mod" x="695" y="450" text-anchor="middle">Cuestiones y reservas</text>
+  <rect class="module" x="55" y="495" width="240" height="60" rx="3"/>
+  <text class="mod" x="175" y="530" text-anchor="middle">Delegaciones</text>
+  <rect class="module" x="315" y="495" width="240" height="60" rx="3"/>
+  <text class="mod" x="435" y="530" text-anchor="middle">Boletas y escrutinio</text>
+  <rect class="module" x="575" y="495" width="240" height="60" rx="3"/>
+  <text class="mod" x="695" y="530" text-anchor="middle">Tesorería</text>
+
+  <!-- Clients → contract -->
+  <line class="line" x1="140" y1="200" x2="140" y2="338" marker-end="url(#arrow)"/>
+  <text class="label" x="148" y="264">altas del padrón</text>
+  <text class="label" x="148" y="278">y de proveedores</text>
+
+  <line class="line" x1="400" y1="200" x2="400" y2="338" marker-end="url(#arrow)"/>
+  <text class="label" x="392" y="264" text-anchor="end">plantear, delegar, votar,</text>
+  <text class="label" x="392" y="278" text-anchor="end">cerrar y pagar</text>
+
+  <line class="line" x1="690" y1="200" x2="690" y2="338" marker-end="url(#arrow)"/>
+  <text class="label" x="682" y="264" text-anchor="end">ofertar y consultar</text>
+
+  <!-- Clients → uploader → IPFS -->
+  <polyline class="line" points="460,200 460,228 940,228 940,202" marker-end="url(#arrow)"/>
+  <polyline class="line" points="820,200 820,228"/>
+  <text class="label" x="880" y="221" text-anchor="middle">subir archivos</text>
+
+  <line class="line" x1="1080" y1="200" x2="1080" y2="268" marker-end="url(#arrow)"/>
+  <text class="label" x="1088" y="238">subir y fijar</text>
+
+  <!-- IPFS → clients (read through the gateway) -->
+  <polyline class="dashed" points="900,305 520,305 520,202" marker-end="url(#arrow)"/>
+  <polyline class="dashed" points="790,305 790,202" marker-end="url(#arrow)"/>
+  <text class="label" x="845" y="298" text-anchor="middle">leer por gateway</text>
+
+  <!-- Contract ↔ IPFS -->
+  <line class="dashed" x1="850" y1="470" x2="898" y2="470" marker-end="url(#arrow)"/>
+  <text class="label" x="874" y="462" text-anchor="middle">CID</text>
+
+  <!-- Development environment -->
+  <rect class="dev" x="20" y="650" width="340" height="65" rx="4"/>
+  <text class="title" x="190" y="674" text-anchor="middle">Entorno de desarrollo</text>
+  <text class="sub" x="190" y="692" text-anchor="middle">Hardhat: compilación, pruebas</text>
+  <text class="sub" x="190" y="706" text-anchor="middle">y despliegue del contrato</text>
+  <line class="dashed" x1="190" y1="650" x2="190" y2="602" marker-end="url(#arrow)"/>
+
+  <!-- Payment -->
+  <rect class="box" x="600" y="650" width="240" height="60" rx="4"/>
+  <text class="title" x="720" y="676" text-anchor="middle">Billetera del proveedor</text>
+  <text class="title" x="720" y="693" text-anchor="middle">adjudicado</text>
+  <line class="line" x1="720" y1="600" x2="720" y2="648" marker-end="url(#arrow)"/>
+  <text class="label" x="728" y="630">transferencia en ETH de prueba</text>
+</svg>
