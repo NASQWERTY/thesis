@@ -250,7 +250,7 @@ async function demoKeys(): Promise<(address: string) => string | undefined> {
   return (a) => byAddress.get(a);
 }
 
-const KEYS_WARNING = "Claves de las cuentas de demo. SOLO TESTNET: nunca uses estas claves con fondos reales.";
+const KEYS_WARNING = "Claves de las cuentas de demo. SOLO TESTNET: nunca use estas claves con fondos reales.";
 
 /**
  * Private keys of the demo accounts, to import them into the member app or a browser wallet.
@@ -288,15 +288,15 @@ async function writeKeysFile(keyOf: (address: string) => string | undefined) {
   const lines = [
     `CUENTAS DE DEMO — ${network === "sepolia" ? "Arbitrum Sepolia (testnet, chainId 421614)" : "red local de Hardhat"}`,
     "",
-    "SOLO TESTNET. Estas claves no tienen ni deben tener valor económico: nunca las uses en una red",
-    "real ni les envíes fondos reales.",
+    "SOLO TESTNET. Estas claves no tienen ni deben tener valor económico: nunca las use en una red",
+    "real ni les envíe fondos reales.",
     "",
     `Contrato: ${contract}`,
     ...(explorer && contract.startsWith("0x") ? [`Explorador: ${explorer}/address/${contract}`] : []),
     "",
     "Cómo usarlas:",
     "- Miembros: en la app móvil, pegar la clave en «O pegue la clave privada» y tocar «Importar»",
-    "  (o «Escanear QR» con el código de `npm run sim -- qr`).",
+    `  (o «Escanear QR» con el código de qr.${network}.html).`,
     "- Proveedores: en MetaMask, «Importar cuenta» con la clave privada; después, en el portal de",
     "  proveedores, «Conectar MetaMask».",
     "",
@@ -568,7 +568,7 @@ async function main() {
   const run = commands[command];
   if (!run) throw new UserError(`Comando desconocido: ${command}. Use --help para ver los comandos.`);
 
-  const c = await connect(network);
+  const c = await connect(network, { readOnly: command === "list" || command === "history" });
   try {
     await run(c);
   } finally {

@@ -41,7 +41,8 @@ const NETWORKS = {
   },
   sepolia: {
     chainId: 421614,
-    rpcUrl: () => requiredEnv("ARBITRUM_SEPOLIA_RPC_URL"),
+    // Public endpoint (rate-limited) when the .env has none.
+    rpcUrl: () => process.env.ARBITRUM_SEPOLIA_RPC_URL || "https://sepolia-rollup.arbitrum.io/rpc",
     registrarKey: () => requiredEnv("DEPLOYER_PRIVATE_KEY"),
     hint: "revise ARBITRUM_SEPOLIA_RPC_URL en el .env",
   },
@@ -51,7 +52,11 @@ export function dataDir(network: NetworkName): URL {
   return new URL(`../data/${network}/`, import.meta.url);
 }
 
-export async function connect(network: NetworkName) {
+/**
+ * `readOnly`: commands that only read (list, history) also run without the registrar's key, so
+ * anyone with the repo can inspect the testnet deployment.
+ */
+export async function connect(network: NetworkName, { readOnly = false } = {}) {
   const cfg = NETWORKS[network];
 
   let deployment: Deployment;
@@ -79,7 +84,9 @@ export async function connect(network: NetworkName) {
     );
   }
 
-  const registrar = new Wallet(cfg.registrarKey(), provider);
+  // Without the key, a random wallet only serves as the contract runner for reads.
+  const key = readOnly && network === "sepolia" && !process.env.DEPLOYER_PRIVATE_KEY ? null : cfg.registrarKey();
+  const registrar = key ? new Wallet(key, provider) : Wallet.createRandom(provider);
   const gov = new Contract(deployment.address, deployment.abi as never, registrar);
   return { network, provider, registrar, gov, deployment };
 }

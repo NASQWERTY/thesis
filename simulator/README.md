@@ -57,6 +57,9 @@ data/sepolia/               to be created for the testnet deployment
 Owners and supplier names are fictitious. The supplier name lives only in the CSV
 (decided 2026-10-23); the contract keeps the address.
 
+`list` and `history` only read: on Sepolia they run without `DEPLOYER_PRIVATE_KEY`, and without
+`ARBITRUM_SEPOLIA_RPC_URL` they use the public Arbitrum RPC.
+
 On the local chain the registrar is Hardhat account 0 and the other keys come from the public
 Hardhat mnemonic. On Sepolia the registrar is `DEPLOYER_PRIVATE_KEY` from the repo `.env`.
 
