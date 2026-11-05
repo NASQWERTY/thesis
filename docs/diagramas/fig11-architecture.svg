@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="735" viewBox="0 0 1170 735" font-family="DejaVu Sans, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" width="1170" height="725" viewBox="0 0 1170 725" font-family="DejaVu Sans, Arial, sans-serif">
   <!-- Figura 11, Arquitectura del prototipo. Hand-written SVG, labels in Spanish. The PNG is a
-       headless Chrome screenshot at 1170x735 with device scale factor 2. -->
+       headless Chrome screenshot at 1170x725 with device scale factor 2. -->
 
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -12,7 +12,6 @@
       .net { fill: #f7f9fc; stroke: #6b8bb5; stroke-width: 1.4; }
       .inner { fill: #ffffff; stroke: #6b8bb5; stroke-width: 1.2; }
       .store { fill: #fdf6e9; stroke: #e0c085; stroke-width: 1.2; }
-      .dev { fill: #f4f5f7; stroke: #8a929c; stroke-width: 1.2; stroke-dasharray: 5 4; }
       .new { fill: #eef3f9; stroke: #2e6da4; stroke-width: 2; }
       .title { font-size: 13px; font-weight: 700; fill: #1f3556; }
       .sub { font-size: 11px; fill: #5a6573; }
@@ -23,7 +22,7 @@
       .dashed { stroke: #3a3f47; stroke-width: 1.2; fill: none; stroke-dasharray: 5 4; }
     </style>
   </defs>
-  <rect width="1170" height="735" fill="#ffffff"/>
+  <rect width="1170" height="725" fill="#ffffff"/>
 
   <!-- Actors -->
   <rect class="box" x="40" y="20" width="200" height="50" rx="4"/>
@@ -123,13 +122,6 @@
   <!-- Contract ↔ IPFS -->
   <line class="dashed" x1="850" y1="470" x2="898" y2="470" marker-end="url(#arrow)"/>
   <text class="label" x="874" y="462" text-anchor="middle">CID</text>
-
-  <!-- Development environment -->
-  <rect class="dev" x="20" y="650" width="340" height="65" rx="4"/>
-  <text class="title" x="190" y="674" text-anchor="middle">Entorno de desarrollo</text>
-  <text class="sub" x="190" y="692" text-anchor="middle">Hardhat: compilación, pruebas</text>
-  <text class="sub" x="190" y="706" text-anchor="middle">y despliegue del contrato</text>
-  <line class="dashed" x1="190" y1="650" x2="190" y2="602" marker-end="url(#arrow)"/>
 
   <!-- Payment -->
   <rect class="box" x="600" y="650" width="240" height="60" rx="4"/>

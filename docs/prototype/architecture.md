@@ -21,9 +21,10 @@ Thesis Figura 11, updated 2026-11-04 with the upload service: `docs/diagramas/fi
  │  padrón · proveedores · cuestiones y reservas ·              │──► transfer (test ETH)
  │  delegaciones · boletas y escrutinio · tesorería             │     to awarded supplier
  └──────────────────────────────────────────────────────────────┘
-        ▲                       (only the CID of each file goes on-chain)
- Dev environment: Hardhat (compile, test, deploy)
+                                (only the CID of each file goes on-chain)
 ```
+
+The development environment (Hardhat: compile, test, deploy) is not part of the figure.
 
 ## Components
 
