@@ -25,7 +25,7 @@ El código se organiza en cinco módulos:
 | Carpeta | Módulo | Tecnología |
 |---|---|---|
 | `contracts/` | Contrato inteligente `CommunityGovernance` | Solidity 0.8.28, Hardhat 3, OpenZeppelin 5 |
-| `simulator/` | Simulador de empadronamiento (registrador) e historial consultable | Node.js, ethers v6 |
+| `simulator/` | Módulo de alta del padrón y de proveedores (registrador) e historial consultable | Node.js, ethers v6 |
 | `uploader/` | Servicio que sube archivos a IPFS (Pinata) | Node.js |
 | `supplier-portal/` | Portal web de proveedores | React + Vite, MetaMask |
 | `mobile/` | Aplicación móvil del miembro | React Native (Expo) |
@@ -51,7 +51,7 @@ Además, las **pruebas automatizadas del contrato** (sección 7) corren sin red 
 
 En la PC (Windows, macOS o Linux):
 
-- **Node.js 24** o superior, con npm (<https://nodejs.org>). El simulador y el uploader ejecutan
+- **Node.js 24** o superior, con npm (<https://nodejs.org>). El módulo de alta del padrón y el uploader ejecutan
   TypeScript directamente con Node.js 24.
 - **Google Chrome** (u otro navegador compatible) con la extensión **MetaMask**, para el portal
   de proveedores.
@@ -283,7 +283,7 @@ especificación:
 
    La cuenta que despliega es el **registrador** del contrato. Use solo una clave de testnet.
 3. Despliegue con `npm run deploy:sepolia` en `contracts/`. El comando reemplaza
-   `shared/deployments/421614.json`, así que el portal, la app y el simulador pasan a usar el
+   `shared/deployments/421614.json`, así que el portal, la app y el módulo de alta pasan a usar el
    contrato nuevo.
 4. Cree las cuentas de demo, desde `simulator/`. Primero ejecute
    `npm run sim -- accounts 11 --network sepolia`. Después reemplace las direcciones de

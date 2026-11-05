@@ -11,7 +11,7 @@ a un grupo predefinido de miembros, plantear cuestiones, obtener ofertas y votar
 | Directorio | Contenido |
 |---|---|
 | `contracts/` | Contrato inteligente `CommunityGovernance` (Solidity + Hardhat) |
-| `simulator/` | Simulador de empadronamiento y alta de proveedores (Node.js) |
+| `simulator/` | Módulo de alta del padrón y de proveedores (Node.js) |
 | `supplier-portal/` | Servicio web de proveedores (React) |
 | `mobile/` | Aplicación del miembro (React Native) |
 | `docs/prototype/` | Especificación, backlog, arquitectura y decisiones abiertas |

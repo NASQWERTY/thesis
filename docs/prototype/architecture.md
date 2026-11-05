@@ -8,9 +8,9 @@ Thesis Figura 11, updated 2026-11-04 with the upload service: `docs/diagramas/fi
  (wallet)               (wallet)                (wallet)
     │                      │                       │
     ▼                      ▼                       ▼
- Simulador de          Aplicación móvil        Servicio web de       ──► Uploader (Node.js) ──► Pinata (IPFS)
- empadronamiento       plantear, delegar,      proveedores               holds the Pinata JWT     │
- y alta de proveedores votar, cerrar,          consultar, ofertar        POST /upload → CID       │
+ Módulo de alta        Aplicación móvil        Servicio web de       ──► Uploader (Node.js) ──► Pinata (IPFS)
+ del padrón            plantear, delegar,      proveedores               holds the Pinata JWT     │
+ y de proveedores      votar, cerrar,          consultar, ofertar        POST /upload → CID       │
  historial             ejecutar                React · ethers.js ·           ▲                    │
  Node.js · ethers.js   React Native·ethers.js  MetaMask                      │                    │
     │                      │  └─ subir archivos ──────┼───────────────────────┘                    │

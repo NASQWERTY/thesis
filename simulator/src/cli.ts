@@ -11,7 +11,7 @@ import { readMembers, readSuppliers, type MemberRow, type SupplierRow } from "./
 import { describeError, UserError } from "./errors.ts";
 import { CLOSE_REASONS, history } from "./history.ts";
 
-const HELP = `Simulador de empadronamiento (registrador)
+const HELP = `Módulo de alta del padrón y de proveedores (registrador)
 
 Uso: npm run sim -- <comando> [argumentos] [--network local|sepolia]
 
@@ -415,7 +415,7 @@ const PLACEHOLDER_CID = "bafkreiaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 
 /** Demo only: raises an issue signing with the member's local Hardhat key. */
 async function issue(c: Connection, memberArg?: string, ceilingArg?: string, description?: string) {
-  if (network !== "local") throw new UserError("Solo en la red local: en testnet el simulador no tiene las claves de los miembros.");
+  if (network !== "local") throw new UserError("Solo en la red local: en testnet el módulo de alta no tiene las claves de los miembros.");
   const member = await resolveMember(memberArg);
   let ceiling: bigint;
   try {
@@ -426,7 +426,7 @@ async function issue(c: Connection, memberArg?: string, ceilingArg?: string, des
   const key = (await demoKeys())(member);
   if (!key) throw new UserError(`No hay clave local para ${member}`);
 
-  const text = description ?? "Cuestión de prueba creada desde el simulador.";
+  const text = description ?? "Cuestión de prueba creada desde el módulo de alta del padrón.";
   let cid = await uploadText("descripcion.txt", text);
   if (cid) console.log(`  Descripción subida a IPFS: ${cid}`);
   else {
