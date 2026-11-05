@@ -23,7 +23,7 @@ Arbitrum Sepolia (testnet). **Sin despliegue en mainnet. Sin activos de valor ec
 
 ## Puesta en marcha
 
-*(instructivo pendiente — se completa en el Sprint 5)*
+Ver [`INSTRUCTIVO.md`](INSTRUCTIVO.md): requisitos, instalación, la demo en Arbitrum Sepolia, la red local, las pruebas del contrato y un despliegue propio.
 
 ## Convenciones
 

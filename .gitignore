@@ -55,3 +55,7 @@ Thumbs.db
 docs/tesis/**/*.docx
 docs/tesis/**/*.pdf
 ~$*
+
+# Demo video and its editor project (delivered on Drive, not versioned)
+docs/demo/*.mp4
+docs/demo/Thesis/
